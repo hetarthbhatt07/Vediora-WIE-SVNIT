@@ -1,33 +1,12 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { currentAccount } from '@/lib/server/account';
+import { DoctorShell } from '@/components/doctor/DoctorShell';
 
-import React, { useState } from 'react';
-import '@/app/globals.css';
-import { Navbar } from '@/components/navigation/Navbar';
-import { Sidebar } from '@/components/navigation/Sidebar';
-import { CommandPaletteModal } from '@/components/modals/CommandPaletteModal';
+export const dynamic = 'force-dynamic';
 
-export default function DoctorLayout({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCommandOpen, setIsCommandOpen] = useState(false);
-
-  return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
-      <Navbar
-        onOpenCommandPalette={() => setIsCommandOpen(true)}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
-      <CommandPaletteModal isOpen={isCommandOpen} onClose={() => setIsCommandOpen(false)} />
-
-      <div className="flex-1 max-w-7xl w-full mx-auto flex">
-        <Sidebar
-          role="doctor"
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+export default async function DoctorLayout({ children }: { children: React.ReactNode }) {
+  const current = await currentAccount();
+  if (!current) redirect('/login');
+  if (current.account.account_type !== 'doctor') redirect('/access-pending');
+  return <DoctorShell email={current.user.email || null}>{children}</DoctorShell>;
 }

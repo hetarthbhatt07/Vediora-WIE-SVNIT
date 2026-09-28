@@ -1,121 +1,30 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Users, Search, ArrowRight, Stethoscope, HeartPulse, ShieldAlert, Calendar } from 'lucide-react';
-import { AppStateService } from '@/lib/store/appStore';
-import { Patient } from '@/types/database';
-import { BentoCard } from '@/components/ui/BentoCard';
-import { TactileButton } from '@/components/ui/TactileButton';
+import { ArrowRight, Search, ShieldCheck, Users } from 'lucide-react';
 import { RecessedInput } from '@/components/ui/RecessedInput';
-import { TactileBadge } from '@/components/ui/TactileBadge';
+import { TactileButton } from '@/components/ui/TactileButton';
+
+interface Patient {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  blood_group: string | null;
+  updated_at: string;
+}
 
 export default function DoctorPatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [query, setQuery] = useState('');
-
-  useEffect(() => {
-    AppStateService.initSeedData();
-    setPatients(AppStateService.getPatients());
-  }, []);
-
-  const filtered = patients.filter(p => 
-    p.full_name.toLowerCase().includes(query.toLowerCase()) ||
-    p.email.toLowerCase().includes(query.toLowerCase()) ||
-    p.patient_id.toString().includes(query)
-  );
-
-  return (
-    <div className="flex flex-col gap-6">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight font-sans">
-              Patient Clinical Registry
-            </h1>
-            <TactileBadge variant="teal" size="sm">{patients.length} Active Patients</TactileBadge>
-          </div>
-          <p className="text-xs text-slate-500 font-mono mt-1">
-            Search patient records, inspect medical histories, and execute pharmacotherapy safety audits
-          </p>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="w-full">
-        <RecessedInput
-          placeholder="Search by patient name, email, or patient ID..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          leftIcon={<Search className="w-4 h-4" />}
-        />
-      </div>
-
-      {/* Patients Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-mono text-xs">
-        {filtered.map(p => {
-          const conds = AppStateService.getPatientConditions(p.patient_id);
-          const allergies = AppStateService.getPatientAllergies(p.patient_id);
-          const rxs = AppStateService.getPrescriptions(p.patient_id);
-
-          return (
-            <div
-              key={p.patient_id}
-              className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs flex flex-col justify-between gap-4 hover:border-slate-300 transition-all"
-            >
-              <div className="flex flex-col gap-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 font-bold text-base flex items-center justify-center font-sans border border-teal-100 shadow-xs">
-                      {p.full_name.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-base font-sans">
-                        {p.full_name}
-                      </h3>
-                      <p className="text-slate-500 text-[11px]">
-                        ID #{p.patient_id} • Age: {p.age} ({p.gender})
-                      </p>
-                    </div>
-                  </div>
-                  <TactileBadge variant="blue" size="sm">O+</TactileBadge>
-                </div>
-
-                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/70 flex flex-col gap-1.5 text-[11px]">
-                  <div className="flex items-center gap-1.5 text-slate-700">
-                    <HeartPulse className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                    <span className="truncate">
-                      <b>Conditions:</b> {conds.map(c => c.medical_condition?.condition_name).join(', ') || 'None recorded'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-slate-700">
-                    <ShieldAlert className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                    <span className="truncate">
-                      <b>Allergies:</b> {allergies.map(a => a.allergen_name).join(', ') || 'No known allergies'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-slate-400 text-[10px]">
-                  {rxs.length} Prescriptions Ingested
-                </span>
-
-                <Link href={`/doctor/patients/${p.patient_id}`}>
-                  <TactileButton variant="primary" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-                    Patient 360
-                  </TactileButton>
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-    </div>
-  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  useEffect(() => { fetch('/api/doctor/workspace', { cache: 'no-store' }).then(async response => { const body = await response.json(); if (!response.ok) throw new Error(body.error); setPatients(body.patients || []); }).catch(error => setError(error.message || 'Could not load patients.')).finally(() => setLoading(false)); }, []);
+  const filtered = useMemo(() => patients.filter(patient => `${patient.full_name} ${patient.email}`.toLowerCase().includes(query.toLowerCase())), [patients, query]);
+  if (loading) return <p role="status" className="p-8 text-slate-500">Loading approved patients…</p>;
+  return <div className="space-y-6"><header className="rounded-2xl border bg-white p-6"><div className="flex items-center gap-3"><Users className="h-6 w-6 text-teal-600" /><div><p className="text-xs font-semibold uppercase tracking-wide text-teal-700">Consent-based directory</p><h1 className="text-2xl font-bold">Approved patients</h1></div></div><p className="mt-3 text-sm text-slate-600">This list is generated from currently approved access requests. Revoked patients disappear on refresh.</p></header>{error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">{error}</p>}<RecessedInput label="Search approved patients" value={query} onChange={event => setQuery(event.target.value)} leftIcon={<Search className="h-4 w-4" />} placeholder="Name or email" />
+    {filtered.length === 0 ? <div className="rounded-xl border border-dashed p-8 text-center"><ShieldCheck className="mx-auto h-7 w-7 text-slate-400" /><p className="mt-3 font-semibold">No approved patients found</p><p className="mt-1 text-sm text-slate-500">Send an access request from the doctor dashboard and wait for patient approval.</p><Link href="/doctor/dashboard" className="mt-4 inline-block"><TactileButton>Open dashboard</TactileButton></Link></div> : <div className="grid gap-4 md:grid-cols-2">{filtered.map(patient => <article key={patient.id} className="rounded-xl border bg-white p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="font-bold text-slate-900">{patient.full_name}</h2><p className="text-sm text-slate-500">{patient.email}</p></div><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Approved</span></div><dl className="mt-4 grid grid-cols-2 gap-2 text-sm"><dt className="text-slate-500">Blood group</dt><dd>{patient.blood_group || 'Not provided'}</dd><dt className="text-slate-500">Date of birth</dt><dd>{patient.date_of_birth || 'Not provided'}</dd></dl><Link href={`/doctor/patients/${patient.id}`} className="mt-5 inline-block"><TactileButton size="sm" rightIcon={<ArrowRight className="h-4 w-4" />}>Open current profile</TactileButton></Link></article>)}</div>}
+  </div>;
 }

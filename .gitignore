@@ -9,6 +9,11 @@
 
 # next.js
 /.next/
+/.next-stale-*/
+/.asset-check.html
+/.next-test/
+/test-results/
+/playwright-report/
 /out/
 
 # production
@@ -22,6 +27,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.next-dev.*.log
+.dev-server.*.log
+.landing-review.png
+.landing-mobile-review.png
 
 # local env files
 .env*.local

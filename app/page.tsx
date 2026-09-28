@@ -1,378 +1,59 @@
 'use client';
 
-import React, { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import Link from 'next/link';
-import { 
-  ShieldCheck, Activity, Pill, HeartPulse, ScanLine, FileText, 
-  CheckCircle2, AlertTriangle, ArrowRight, Stethoscope, Sparkles, 
-  Layers, Lock, Database, Search, Cpu, FileCheck, Eye, RefreshCw, Zap
-} from 'lucide-react';
-import { Navbar } from '@/components/navigation/Navbar';
-import { Footer } from '@/components/navigation/Footer';
-import { BentoCard } from '@/components/ui/BentoCard';
+import { ArrowRight, Bot, Check, Database, FileCheck, LockKeyhole, MessageSquare, Pill, Send, ShieldCheck, Stethoscope, UserRoundCheck } from 'lucide-react';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 import { TactileButton } from '@/components/ui/TactileButton';
-import { TactileBadge } from '@/components/ui/TactileBadge';
-import { CommandPaletteModal } from '@/components/modals/CommandPaletteModal';
+
+interface ChatMessage { role: 'user' | 'assistant'; text: string; }
+const examples = ['Can I take aspirin and warfarin together?', 'What can I do after signing in?'];
 
 export default function LandingPage() {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', text: 'Ask me about a medicine combination or what Vediora can do. You can try two messages before signing in.' }]);
+  const [input, setInput] = useState('');
+  const [remaining, setRemaining] = useState(2);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function send(event: FormEvent) {
+    event.preventDefault();
+    const question = input.trim();
+    if (!question || busy || remaining <= 0) return;
+    setMessages(current => [...current, { role: 'user', text: question }]); setInput(''); setBusy(true); setError('');
+    try {
+      const conversation = messages.slice(-6).map(message => ({ role: message.role, content: message.text }));
+      const response = await fetch('/api/public/preview-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: question, conversation }) });
+      const body = await response.json();
+      if (!response.ok) {
+        if (response.status === 429) { setRemaining(0); setMessages(current => [...current, { role: 'assistant', text: body.error }]); return; }
+        throw new Error(body.error || 'The preview is temporarily unavailable.');
+      }
+      setMessages(current => [...current, { role: 'assistant', text: body.answer }]);
+    } catch (error) { setError(error instanceof Error ? error.message : 'The preview is temporarily unavailable.'); }
+    finally { setBusy(false); }
+  }
+  function useExample(value: string) { if (remaining > 0 && !busy) setInput(value); }
+  return <div className="min-h-screen bg-white text-slate-950">
+    <header className="border-b border-slate-200 bg-white"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6"><BrandLogo showBadge={false} /><div className="flex items-center gap-2"><Link href="/login"><TactileButton variant="secondary" size="sm">Sign in</TactileButton></Link><Link href="/signup"><TactileButton size="sm">Create account</TactileButton></Link></div></div></header>
 
-  const workflowSteps = [
-    {
-      num: '01',
-      title: 'Prescription Ingestion',
-      subtitle: 'Image / PDF / Camera / Manual',
-      description: 'Upload handwritten or printed prescriptions (JPG, PNG, PDF), scan medicine packaging via camera, or search the drug database manually.',
-      icon: ScanLine,
-      badge: 'Input Pipeline'
-    },
-    {
-      num: '02',
-      title: 'Image Pre-processing & OCR',
-      subtitle: 'Bilateral Denoising & Tesseract Engine',
-      description: 'Automatic deskewing, Otsu contrast enhancement, and neural OCR character recognition convert raw imagery into clean structured text.',
-      icon: Cpu,
-      badge: 'Pre-Processing'
-    },
-    {
-      num: '03',
-      title: 'RxNorm Normalization',
-      subtitle: 'Entity Extraction & RxCUI Mapping',
-      description: 'Named entity recognition extracts brand names and maps them to canonical generic active ingredients with RxNorm IDs and standard dosage forms.',
-      icon: Pill,
-      badge: 'Knowledge Standard'
-    },
-    {
-      num: '04',
-      title: 'Clinical Interaction Matrix',
-      subtitle: 'Pairwise Rules & Contraindication Check',
-      description: 'Evaluates drug-drug combinations, patient ICD-10 medical history, allergy cross-reactivity, and FDA black-box warnings.',
-      icon: Layers,
-      badge: 'Safety Engine'
-    },
-    {
-      num: '05',
-      title: 'AI Reasoning & Safe Gatekeeper',
-      subtitle: 'Context Synthesis & Anti-Hallucination',
-      description: 'AI reasoning layer reviews clinical evidence, calculates overall risk scores, and strictly checks safety gatekeeper criteria before reporting.',
-      icon: Sparkles,
-      badge: 'Decision Core'
-    },
-    {
-      num: '06',
-      title: 'Dual Recipient Reports',
-      subtitle: 'Patient Guidance + Doctor Clinical Report',
-      description: 'Generates plain-language action plans for patients and detailed pharmacological evidence dossiers with monitoring suggestions for doctors.',
-      icon: FileCheck,
-      badge: 'Output Synthesis'
-    }
-  ];
+    <main>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-blue-50/70 via-white to-white"><div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-200/30 blur-3xl"/><div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:items-center lg:py-24">
+        <div><div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm"><ShieldCheck className="h-4 w-4"/>Medication information grounded in your database</div><h1 className="mt-6 max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">Understand your medicines. Keep your care team in sync.</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">Vediora keeps your confirmed medicine list in one place, checks documented interaction records, explains medical questions with a local AI model, and lets you decide which doctor can see your information.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/signup"><TactileButton size="lg" rightIcon={<ArrowRight className="h-4 w-4"/>}>Create your workspace</TactileButton></Link><Link href="#how-it-works"><TactileButton size="lg" variant="secondary">See how it works</TactileButton></Link></div><div className="mt-8 grid max-w-xl grid-cols-2 gap-3 text-sm text-slate-600"><span className="flex items-center gap-2"><Check className="h-4 w-4 text-teal-600"/>Patient-controlled access</span><span className="flex items-center gap-2"><Check className="h-4 w-4 text-teal-600"/>Local Mistral assistant</span><span className="flex items-center gap-2"><Check className="h-4 w-4 text-teal-600"/>Database evidence</span><span className="flex items-center gap-2"><Check className="h-4 w-4 text-teal-600"/>Versioned reports</span></div></div>
 
-  const features = [
-    {
-      title: 'Multi-Format Prescription OCR',
-      desc: 'Neural OCR extracts handwritten and printed prescriptions with noise filtering and manual verification controls.',
-      icon: FileText
-    },
-    {
-      title: 'RxNorm Standard Normalization',
-      desc: 'Translates brand trade names to standardized RxCUI codes, ATC classification, and canonical formulations.',
-      icon: Pill
-    },
-    {
-      title: 'Pairwise Drug-Drug Interactions',
-      desc: 'Comprehensive interaction matrix detecting pharmacokinetic and pharmacodynamic synergistic risks.',
-      icon: Layers
-    },
-    {
-      title: 'ICD-10 Contraindication Checking',
-      desc: 'Cross-checks patient medical conditions against absolute and relative clinical contraindications.',
-      icon: HeartPulse
-    },
-    {
-      title: 'Drug Avoidance & Alternatives',
-      desc: 'Automatically identifies unsafe medications and proposes clinically approved safer alternatives.',
-      icon: ShieldCheck
-    },
-    {
-      title: 'Allergy Registry Cross-Screening',
-      desc: 'Protects patients against anaphylactic and hypersensitivity triggers across active pharmacological classes.',
-      icon: AlertTriangle
-    },
-    {
-      title: 'AI Safety Gatekeeper',
-      desc: 'Prevents clinical hallucinations by validating all decisions against structured evidence sources.',
-      icon: Sparkles
-    },
-    {
-      title: 'Doctor & Patient Dual Reports',
-      desc: 'Provides simplified guidance for patients and in-depth pharmacological dossiers with citations for clinicians.',
-      icon: FileCheck
-    },
-    {
-      title: 'DigiLocker & ABHA Integration',
-      desc: 'Seamlessly link government verified health IDs to import digital prescriptions securely.',
-      icon: Lock
-    }
-  ];
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-blue-950/10"><div className="flex items-center justify-between border-b border-slate-100 px-5 py-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"><Bot className="h-5 w-5"/></span><div><h2 className="font-bold">Try Vediora</h2><p className="text-xs text-slate-500">Two-message guest preview</p></div></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{remaining} left</span></div><div className="flex min-h-80 flex-col gap-3 bg-slate-50/70 p-5" aria-live="polite">{messages.map((message,index)=><div key={index} className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-6 ${message.role==='user'?'ml-auto bg-blue-600 text-white':'border border-slate-200 bg-white text-slate-700 shadow-sm'}`}>{message.text}</div>)}{busy&&<div className="w-fit rounded-2xl border bg-white px-4 py-3 text-sm text-slate-500">Checking the preview database…</div>}{remaining===0&&<div className="mt-auto rounded-2xl border border-blue-200 bg-blue-50 p-4"><p className="text-sm font-semibold text-blue-950">Continue with your own medicine profile</p><p className="mt-1 text-xs leading-5 text-blue-800">Sign in to save conversations, include active medicines, and generate evidence reports.</p><Link href="/login" className="mt-3 inline-block"><TactileButton size="sm">Sign in to continue</TactileButton></Link></div>}</div>{remaining>0&&<div className="border-t bg-white p-4"><div className="mb-3 flex flex-wrap gap-2">{examples.map(example=><button key={example} onClick={()=>useExample(example)} className="rounded-full border border-slate-200 px-3 py-1.5 text-left text-xs text-slate-600 hover:border-blue-300 hover:bg-blue-50">{example}</button>)}</div><form onSubmit={send} className="flex items-end gap-2 rounded-xl border border-slate-300 bg-white p-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100"><label htmlFor="guest-question" className="sr-only">Ask the guest medicine assistant</label><textarea id="guest-question" value={input} onChange={event=>setInput(event.target.value)} maxLength={500} rows={2} placeholder="Ask about medicines or Vediora…" className="min-h-12 flex-1 resize-none border-0 px-2 py-1 text-sm outline-none"/><TactileButton type="submit" size="sm" disabled={!input.trim()} isLoading={busy} aria-label="Send guest question" leftIcon={<Send className="h-4 w-4"/>}>Send</TactileButton></form>{error&&<p role="alert" className="mt-2 text-xs text-red-600">{error}</p>}<p className="mt-2 text-[11px] leading-4 text-slate-400">Preview answers are educational. Missing database records do not prove safety.</p></div>}</div>
+      </div></section>
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar onOpenCommandPalette={() => setIsSearchOpen(true)} />
-      <CommandPaletteModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <section id="how-it-works" className="mx-auto max-w-7xl px-4 py-20 sm:px-6"><div className="max-w-2xl"><p className="text-sm font-bold uppercase tracking-widest text-blue-600">How Vediora works</p><h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">One medicine record, connected patient and doctor workspaces</h2><p className="mt-4 text-slate-600">The product keeps the important steps clear and reviewable. Database findings stay separate from AI explanations.</p></div><div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">{[
+        [Pill,'Confirm your medicines','Save active medicines and reviewed prescription entries using names matched to the imported catalog.'],
+        [Database,'Check documented pairs','Vediora checks every recognized medicine pair against the interaction database and shows missing coverage as uncertainty.'],
+        [MessageSquare,'Ask in plain language','Local Mistral explains medicines and general medical topics while database records remain authoritative for interactions.'],
+        [FileCheck,'Keep evidence versions','Generate printable patient or doctor reports that preserve the medicines, findings, sources, and missing pairs used.'],
+      ].map(([Icon,title,copy])=><article key={String(title)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><Icon className="h-5 w-5"/></span><h3 className="mt-5 text-lg font-bold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{String(copy)}</p></article>)}</div></section>
 
-      {/* HERO SECTION */}
-      <section className="relative pt-12 pb-20 overflow-hidden border-b border-slate-200/80 bg-white/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center gap-6 relative z-10">
-          
-          {/* Top Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#2563EB] animate-pulse" />
-            <span className="text-xs font-mono font-semibold text-blue-700">
-              SVNIT WIE Hackathon 2026 • Medication Safety Architecture
-            </span>
-          </div>
+      <section className="border-y border-slate-200 bg-slate-50"><div className="mx-auto grid max-w-7xl gap-6 px-4 py-20 sm:px-6 lg:grid-cols-2"><article className="rounded-3xl border border-blue-200 bg-white p-8"><div className="flex items-center justify-between"><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">For patients</span><UserRoundCheck className="h-6 w-6 text-blue-600"/></div><h2 className="mt-5 text-2xl font-black">Your medicine safety workspace</h2><ul className="mt-5 space-y-3 text-sm text-slate-600"><li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-teal-600"/>Maintain active and discontinued medicine history</li><li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-teal-600"/>Save confirmed prescriptions and evidence reports</li><li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-teal-600"/>Approve, deny, or revoke doctor access</li><li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-teal-600"/>Continue private, remembered medical chats</li></ul><Link href="/signup" className="mt-7 inline-block"><TactileButton>Start as a patient</TactileButton></Link></article><article className="rounded-3xl border border-teal-200 bg-white p-8"><div className="flex items-center justify-between"><span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-700">For doctors</span><Stethoscope className="h-6 w-6 text-teal-600"/></div><h2 className="mt-5 text-2xl font-black">Consent-based clinical review</h2><ul className="mt-5 space-y-3 text-sm text-slate-600"><li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-teal-600"/>Request access using the patient’s account email</li><li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-teal-600"/>View only currently approved patient records</li><li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-teal-600"/>Run database-grounded medicine reviews</li><li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-teal-600"/>Open versioned evidence reports</li></ul><Link href="/signup" className="mt-7 inline-block"><TactileButton variant="success">Register as a doctor</TactileButton></Link></article></div></section>
 
-          {/* Main Headline */}
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight max-w-4xl font-sans leading-[1.15]">
-            Smarter Medication Safety <br className="hidden sm:inline" />
-            with <span className="text-[#2563EB]">AI Clinical Intelligence</span>
-          </h1>
-
-          {/* Subheading */}
-          <p className="text-base sm:text-lg text-slate-600 font-mono max-w-2xl leading-relaxed">
-            Instantly ingest prescriptions via OCR, normalize medications via RxNorm, evaluate multi-drug interaction matrices, and generate verified safety reports for patients & doctors.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Link href="/signup">
-              <TactileButton variant="primary" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Get Started Free
-              </TactileButton>
-            </Link>
-            <Link href="/login">
-              <TactileButton variant="secondary" size="lg" leftIcon={<Lock className="w-4 h-4" />}>
-                Sign In to Portal
-              </TactileButton>
-            </Link>
-            <Link href="/patient/analysis">
-              <TactileButton variant="outline" size="lg" leftIcon={<Zap className="w-4 h-4 text-amber-500" />}>
-                Test Live Safety Engine
-              </TactileButton>
-            </Link>
-          </div>
-
-          {/* Quick Demo Preview Card */}
-          <div className="w-full max-w-4xl mt-8 p-1.5 rounded-2xl bg-slate-200/80 shadow-2xl border border-slate-300">
-            <div className="bg-white rounded-xl p-5 sm:p-6 border border-slate-200/90 text-left shadow-xs flex flex-col gap-4">
-              
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-400" />
-                  <span className="text-xs font-mono font-bold text-slate-700 ml-2">
-                    LIVE CLINICAL EVALUATION: Warfarin 5mg + Ibuprofen 400mg
-                  </span>
-                </div>
-                <TactileBadge variant="red" dot size="sm">Major Interaction Flagged</TactileBadge>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Compound 1</span>
-                  <span className="font-bold text-slate-900 text-sm">Warfarin 5mg</span>
-                  <span className="text-slate-500 block mt-0.5">RxCUI: 11289 • Anticoagulant</span>
-                </div>
-
-                <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Compound 2</span>
-                  <span className="font-bold text-slate-900 text-sm">Ibuprofen 400mg</span>
-                  <span className="text-slate-500 block mt-0.5">RxCUI: 5640 • NSAID</span>
-                </div>
-
-                <div className="p-3.5 rounded-lg bg-red-50/80 border border-red-200 text-xs font-mono text-red-900">
-                  <span className="text-red-600 block text-[10px] uppercase font-bold">Risk Assessment</span>
-                  <span className="font-bold text-red-700 text-sm">Synergistic Bleeding Risk</span>
-                  <span className="text-red-600 block mt-0.5">Switch to Acetaminophen</span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs font-mono text-slate-500">
-                <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Validated via FDA Drug Safety Communication & CHEST Antithrombotic Guidelines
-                </span>
-                <Link href="/patient/analysis" className="text-[#2563EB] hover:underline font-bold">
-                  Run Full Analysis →
-                </Link>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ARCHITECTURE WORKFLOW STEPPER */}
-      <section id="how-it-works" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col items-center text-center gap-3 mb-12">
-          <TactileBadge variant="blue">End-to-End SVNIT Workflow</TactileBadge>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-sans tracking-tight">
-            How the Safety Architecture Operates
-          </h2>
-          <p className="text-sm font-mono text-slate-500 max-w-xl">
-            From optical prescription ingestion to structured clinical reasoning and multi-stakeholder report generation.
-          </p>
-        </div>
-
-        {/* Stepper Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {workflowSteps.map((step, idx) => {
-            const Icon = step.icon;
-            const isSelected = activeStep === idx;
-
-            return (
-              <div
-                key={step.num}
-                onClick={() => setActiveStep(idx)}
-                className={`relative bg-white rounded-xl border p-6 transition-all duration-200 cursor-pointer ${
-                  isSelected
-                    ? 'border-[#2563EB] ring-2 ring-[#2563EB]/20 shadow-md'
-                    : 'border-slate-200/90 shadow-xs hover:border-slate-300 hover:shadow-sm'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-2.5 rounded-lg bg-blue-50 text-[#2563EB] border border-blue-100">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span className="text-xs font-mono font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">
-                    STEP {step.num}
-                  </span>
-                </div>
-
-                <h3 className="font-bold text-slate-900 text-lg mb-1">{step.title}</h3>
-                <p className="text-xs text-[#2563EB] font-mono font-semibold mb-2">{step.subtitle}</p>
-                <p className="text-xs text-slate-600 font-sans leading-relaxed">{step.description}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* CORE FEATURES GRID */}
-      <section id="features" className="py-20 bg-slate-100/60 border-y border-slate-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="flex flex-col items-center text-center gap-3 mb-12">
-            <TactileBadge variant="teal">Comprehensive Capabilities</TactileBadge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-sans tracking-tight">
-              Clinical-Grade Medication Protection
-            </h2>
-            <p className="text-sm font-mono text-slate-500 max-w-xl">
-              Engineered with zero tolerance for hallucinations, powered by verified clinical databases.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {features.map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <BentoCard
-                  key={i}
-                  title={f.title}
-                  icon={<Icon className="w-5 h-5" />}
-                  hoverEffect
-                >
-                  <p className="text-xs text-slate-600 font-mono leading-relaxed mt-2">
-                    {f.desc}
-                  </p>
-                </BentoCard>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
-      {/* TWO WORKSPACES: PATIENT VS DOCTOR */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
-          {/* Patient Card */}
-          <div className="p-8 rounded-2xl bg-white border border-slate-200/90 shadow-md flex flex-col justify-between gap-6 relative overflow-hidden">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <TactileBadge variant="blue">For Patients & Families</TactileBadge>
-                <Pill className="w-6 h-6 text-blue-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900">Personal Health & Safety Hub</h3>
-              <p className="text-xs font-mono text-slate-600 leading-relaxed">
-                Scan your prescriptions, track active daily dosages, understand food precautions in simple everyday language, and receive instant alerts when combining unsafe pain relievers with your medications.
-              </p>
-              <ul className="space-y-2 text-xs font-mono text-slate-700">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  Prescription OCR & Easy Confirmation
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  Medical History & Allergies Tracker
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  Plain English Patient Safety Summaries
-                </li>
-              </ul>
-            </div>
-
-            <Link href="/patient/dashboard">
-              <TactileButton variant="primary" size="md" className="w-full">
-                Open Patient Portal →
-              </TactileButton>
-            </Link>
-          </div>
-
-          {/* Doctor Card */}
-          <div className="p-8 rounded-2xl bg-white border border-slate-200/90 shadow-md flex flex-col justify-between gap-6 relative overflow-hidden">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <TactileBadge variant="teal">For Healthcare Professionals</TactileBadge>
-                <Stethoscope className="w-6 h-6 text-teal-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900">Clinician Decision Workbench</h3>
-              <p className="text-xs font-mono text-slate-600 leading-relaxed">
-                Deep pharmacological analysis, ICD-10 contraindication matching, CPIC guideline references, patient longitudinal history review, and exportable clinical decision support dossiers.
-              </p>
-              <ul className="space-y-2 text-xs font-mono text-slate-700">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
-                  Full Patient 360 & Longitudinal Records
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
-                  Pharmacodynamic / Pharmacokinetic Cross-Matrix
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
-                  Printable Clinician Dossiers & Audit Trails
-                </li>
-              </ul>
-            </div>
-
-            <Link href="/doctor/dashboard">
-              <TactileButton variant="success" size="md" className="w-full">
-                Open Doctor Workbench →
-              </TactileButton>
-            </Link>
-          </div>
-
-        </div>
-      </section>
-
-      <Footer />
-    </div>
-  );
+      <section className="mx-auto max-w-5xl px-4 py-20 text-center sm:px-6"><LockKeyhole className="mx-auto h-8 w-8 text-blue-600"/><h2 className="mt-5 text-3xl font-black">Ready to use your own medicine profile?</h2><p className="mx-auto mt-4 max-w-2xl text-slate-600">Create an account to save medicines, remember chats, manage doctor consent, and keep evidence reports connected to one workspace.</p><div className="mt-7 flex justify-center gap-3"><Link href="/signup"><TactileButton size="lg">Create account</TactileButton></Link><Link href="/login"><TactileButton size="lg" variant="secondary">Sign in</TactileButton></Link></div></section>
+    </main>
+    <footer className="border-t border-slate-200 bg-slate-950 text-slate-300"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6"><BrandLogo showBadge={false} className="[&_span]:text-white"/><p className="max-w-xl text-xs leading-5 text-slate-400">Vediora is an educational medication-support tool. Confirm personal treatment decisions with a qualified doctor or pharmacist.</p></div></footer>
+  </div>;
 }

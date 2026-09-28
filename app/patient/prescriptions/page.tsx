@@ -1,208 +1,58 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { 
-  FileText, Upload, Plus, Search, Trash2, Eye, 
-  ExternalLink, Calendar, Stethoscope, Sparkles, CheckCircle2 
-} from 'lucide-react';
-import { AppStateService } from '@/lib/store/appStore';
-import { Prescription } from '@/types/database';
-import { BentoCard } from '@/components/ui/BentoCard';
-import { TactileButton } from '@/components/ui/TactileButton';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { ClipboardCheck, FileText, Plus, Trash2 } from 'lucide-react';
 import { RecessedInput } from '@/components/ui/RecessedInput';
-import { TactileBadge } from '@/components/ui/TactileBadge';
-import { Modal } from '@/components/ui/Modal';
-import { useToast } from '@/components/ui/ToastProvider';
+import { TactileButton } from '@/components/ui/TactileButton';
+import { markWorkspaceUpdated } from '@/lib/workspace-sync';
+
+interface Item { id: string; medicine_name: string; dosage: string | null; frequency: string | null; duration: string | null; instructions: string | null; added_to_profile: boolean; }
+interface Prescription { id: string; prescriber_name: string | null; prescribed_on: string | null; notes: string | null; status: string; created_at: string; items: Item[]; }
+type DraftItem = { medicine_name: string; dosage: string; frequency: string; duration: string; instructions: string; add_to_profile: boolean };
+const blankItem = (): DraftItem => ({ medicine_name: '', dosage: '', frequency: '', duration: '', instructions: '', add_to_profile: true });
 
 export default function PrescriptionsPage() {
-  const { success } = useToast();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [selectedRx, setSelectedRx] = useState<Prescription | null>(null);
-  const [query, setQuery] = useState('');
-
-  const loadData = () => {
-    AppStateService.initSeedData();
-    const user = AppStateService.getCurrentUser();
-    const pId = user?.patient_id || 101;
-    const list = AppStateService.getPrescriptions(pId);
-    setPrescriptions(list);
-  };
-
-  useEffect(() => {
-    loadData();
+  const [items, setItems] = useState<DraftItem[]>([blankItem()]);
+  const [prescriber, setPrescriber] = useState('');
+  const [date, setDate] = useState('');
+  const [notes, setNotes] = useState('');
+  const [confirmed, setConfirmed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { const response = await fetch('/api/patient/prescriptions', { cache: 'no-store' }); const body = await response.json(); if (!response.ok) throw new Error(body.error); setPrescriptions(body.prescriptions || []); }
+    catch (error) { setError(error instanceof Error ? error.message : 'Could not load prescriptions.'); }
+    finally { setLoading(false); }
   }, []);
-
-  const handleDelete = (id: number) => {
-    AppStateService.deletePrescription(id);
-    success('Prescription Deleted', 'Removed from medical records.');
-    loadData();
-  };
-
-  const filtered = prescriptions.filter(p => 
-    p.doctor_name.toLowerCase().includes(query.toLowerCase()) ||
-    p.hospital_name.toLowerCase().includes(query.toLowerCase()) ||
-    p.ocr_text.toLowerCase().includes(query.toLowerCase())
-  );
-
-  return (
-    <div className="flex flex-col gap-6">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight font-sans">
-              Prescription Archive & OCR Records
-            </h1>
-            <TactileBadge variant="blue" size="sm">{prescriptions.length} Archival Documents</TactileBadge>
-          </div>
-          <p className="text-xs text-slate-500 font-mono mt-1">
-            Digitized doctor prescriptions with neural OCR text extractions and clinical audits
-          </p>
-        </div>
-
-        <Link href="/patient/analysis">
-          <TactileButton
-            variant="primary"
-            size="md"
-            leftIcon={<Upload className="w-4 h-4" />}
-          >
-            Upload New Prescription
-          </TactileButton>
-        </Link>
-      </div>
-
-      {/* Search */}
-      <div className="w-full">
-        <RecessedInput
-          placeholder="Search by prescribing doctor, clinic, or extracted medicine text..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          leftIcon={<Search className="w-4 h-4" />}
-        />
-      </div>
-
-      {/* Prescriptions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map(rx => (
-          <div
-            key={rx.prescription_id}
-            className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs flex flex-col justify-between gap-4 hover:border-slate-300 transition-all"
-          >
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-blue-50 text-blue-700">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-base font-sans">
-                      {rx.doctor_name}
-                    </h3>
-                    <p className="text-xs text-slate-500 font-mono">
-                      {rx.hospital_name}
-                    </p>
-                  </div>
-                </div>
-
-                <TactileBadge variant="teal" size="sm">
-                  Rx #{rx.prescription_id}
-                </TactileBadge>
-              </div>
-
-              {/* OCR Text Snippet */}
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/80 text-xs font-mono text-slate-700">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                  Extracted OCR Transcript:
-                </span>
-                <p className="line-clamp-2 leading-relaxed">
-                  {rx.ocr_text}
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-mono text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                Date: {rx.prescription_date}
-              </span>
-
-              <div className="flex items-center gap-2">
-                <TactileButton
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setSelectedRx(rx)}
-                  leftIcon={<Eye className="w-3.5 h-3.5" />}
-                >
-                  View OCR Transcript
-                </TactileButton>
-
-                <Link href="/patient/analysis/results">
-                  <TactileButton
-                    variant="primary"
-                    size="sm"
-                    leftIcon={<Sparkles className="w-3.5 h-3.5" />}
-                  >
-                    Analyze
-                  </TactileButton>
-                </Link>
-
-                <button
-                  onClick={() => handleDelete(rx.prescription_id)}
-                  className="p-1.5 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Transcript Detail Modal */}
-      {selectedRx && (
-        <Modal
-          isOpen={true}
-          onClose={() => setSelectedRx(null)}
-          title={`Prescription Document #${selectedRx.prescription_id}`}
-          subtitle={`${selectedRx.doctor_name} • ${selectedRx.hospital_name}`}
-          maxWidth="lg"
-        >
-          <div className="flex flex-col gap-4 font-mono text-xs">
-            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <div>
-                <span className="text-slate-400 block text-[10px] uppercase">Prescription Date</span>
-                <span className="font-bold text-slate-900">{selectedRx.prescription_date}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[10px] uppercase">OCR Engine Status</span>
-                <span className="font-bold text-emerald-700">Tesseract OCR Verified (98%)</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="font-bold text-slate-900 text-sm font-sans">Full OCR Extracted Text</span>
-              <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed whitespace-pre-wrap shadow-inner">
-                {selectedRx.ocr_text}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <TactileButton variant="secondary" size="sm" onClick={() => setSelectedRx(null)}>
-                Close
-              </TactileButton>
-              <Link href="/patient/analysis/results">
-                <TactileButton variant="primary" size="sm" leftIcon={<Sparkles className="w-4 h-4" />}>
-                  Run Safety Engine
-                </TactileButton>
-              </Link>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-    </div>
-  );
+  useEffect(() => { void load(); }, [load]);
+  const updateItem = (index: number, patch: Partial<DraftItem>) => setItems(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item));
+  async function save(event: FormEvent) {
+    event.preventDefault(); setSaving(true); setError(''); setMessage('');
+    try {
+      const response = await fetch('/api/patient/prescriptions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prescriber_name: prescriber, prescribed_on: date, notes, confirmed, items }) });
+      const body = await response.json(); if (!response.ok) throw new Error(body.error);
+      setPrescriber(''); setDate(''); setNotes(''); setItems([blankItem()]); setConfirmed(false);
+      markWorkspaceUpdated('patient');
+      setMessage('Confirmed prescription saved. Selected medicines are now reflected in My medicines.'); await load();
+    } catch (error) { setError(error instanceof Error ? error.message : 'Could not save prescription.'); }
+    finally { setSaving(false); }
+  }
+  return <div className="space-y-6">
+    <header className="rounded-2xl border bg-white p-6"><p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Patient workspace</p><h1 className="mt-2 text-2xl font-bold">Prescriptions</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Enter the medicines exactly as shown, review them, and confirm before saving. Vediora matches every medicine to the imported database; it never treats unconfirmed OCR text as clinical data.</p></header>
+    {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}{message && <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}
+    <form onSubmit={save} className="space-y-5 rounded-2xl border bg-white p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="flex items-center gap-2 font-bold"><ClipboardCheck className="h-5 w-5 text-blue-600" />Add a confirmed prescription</h2><p className="mt-1 text-xs text-slate-500">Manual entry is connected now. Image and PDF OCR will be added after secure document storage is configured.</p></div><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Manual entry</span></div>
+      <div className="grid gap-4 sm:grid-cols-2"><RecessedInput label="Prescriber name" value={prescriber} onChange={event => setPrescriber(event.target.value)} maxLength={200} placeholder="Doctor or clinic" /><RecessedInput label="Prescription date" type="date" max={new Date().toISOString().slice(0, 10)} value={date} onChange={event => setDate(event.target.value)} /></div>
+      <div className="space-y-4">{items.map((item, index) => <div key={index} className="rounded-xl border border-slate-200 bg-slate-50/50 p-4"><div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold">Medicine {index + 1}</h3>{items.length > 1 && <button type="button" aria-label={`Remove medicine ${index + 1}`} onClick={() => setItems(current => current.filter((_, itemIndex) => itemIndex !== index))} className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}</div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><RecessedInput label="Exact medicine name" required value={item.medicine_name} onChange={event => updateItem(index, { medicine_name: event.target.value })} placeholder="For example: warfarin" /><RecessedInput label="Dosage" value={item.dosage} onChange={event => updateItem(index, { dosage: event.target.value })} placeholder="5 mg" /><RecessedInput label="Frequency" value={item.frequency} onChange={event => updateItem(index, { frequency: event.target.value })} placeholder="Once daily" /><RecessedInput label="Duration" value={item.duration} onChange={event => updateItem(index, { duration: event.target.value })} placeholder="30 days" /></div><RecessedInput className="mt-3" aria-label={`Instructions for medicine ${index + 1}`} value={item.instructions} onChange={event => updateItem(index, { instructions: event.target.value })} placeholder="Instructions, for example: after food" /><label className="mt-3 flex items-center gap-2 text-xs font-medium text-slate-700"><input type="checkbox" checked={item.add_to_profile} onChange={event => updateItem(index, { add_to_profile: event.target.checked })} className="h-4 w-4 rounded border-slate-300" />Add or update this medicine in My medicines</label></div>)}</div>
+      <TactileButton type="button" variant="secondary" size="sm" onClick={() => setItems(current => current.length < 20 ? [...current, blankItem()] : current)} leftIcon={<Plus className="h-4 w-4" />}>Add another medicine</TactileButton>
+      <label className="block text-xs font-semibold text-slate-700">Prescription notes<textarea value={notes} onChange={event => setNotes(event.target.value)} maxLength={1000} rows={3} className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm font-normal focus:border-blue-500 focus:outline-none" /></label>
+      <label className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><input type="checkbox" required checked={confirmed} onChange={event => setConfirmed(event.target.checked)} className="mt-0.5 h-4 w-4" /><span>I reviewed the medicine names and instructions against my prescription. I understand this record does not replace advice from my doctor or pharmacist.</span></label>
+      <TactileButton type="submit" isLoading={saving} leftIcon={<ClipboardCheck className="h-4 w-4" />}>Save confirmed prescription</TactileButton>
+    </form>
+    <section className="space-y-3"><h2 className="text-lg font-bold">Prescription history</h2>{loading ? <p className="text-sm text-slate-500">Loading prescriptions…</p> : prescriptions.length === 0 ? <div className="rounded-xl border border-dashed bg-white p-8 text-center"><FileText className="mx-auto h-7 w-7 text-slate-400" /><p className="mt-3 font-semibold">No confirmed prescriptions yet</p></div> : prescriptions.map(prescription => <article key={prescription.id} className="rounded-xl border bg-white p-5"><div className="flex flex-wrap justify-between gap-2"><div><h3 className="font-bold">{prescription.prescriber_name || 'Prescription record'}</h3><p className="mt-1 text-xs text-slate-500">{prescription.prescribed_on || new Date(prescription.created_at).toLocaleDateString()} · {prescription.items.length} medicine{prescription.items.length === 1 ? '' : 's'}</p></div><span className="h-fit rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{prescription.status}</span></div><div className="mt-4 grid gap-3 md:grid-cols-2">{prescription.items.map(item => <div key={item.id} className="rounded-lg border bg-slate-50 p-3"><p className="font-semibold text-slate-900">{item.medicine_name}</p><p className="mt-1 text-xs text-slate-600">{[item.dosage, item.frequency, item.duration].filter(Boolean).join(' · ') || 'Dose details not provided'}</p>{item.instructions && <p className="mt-1 text-xs text-slate-600">{item.instructions}</p>}<p className="mt-2 text-[11px] font-semibold text-blue-700">{item.added_to_profile ? 'Synced to My medicines' : 'Kept in this prescription only'}</p></div>)}</div>{prescription.notes && <p className="mt-3 text-sm text-slate-600">{prescription.notes}</p>}</article>)}</section>
+  </div>;
 }

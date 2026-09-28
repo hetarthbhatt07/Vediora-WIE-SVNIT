@@ -1,93 +1,13 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { FileCheck, FileText, ArrowRight, Printer, Calendar, User, Stethoscope } from 'lucide-react';
-import { AppStateService } from '@/lib/store/appStore';
-import { AnalysisSession } from '@/types/database';
-import { BentoCard } from '@/components/ui/BentoCard';
+import { FileCheck } from 'lucide-react';
+import { DoctorReportView, type DoctorReport } from '@/components/doctor/DoctorReportView';
 import { TactileButton } from '@/components/ui/TactileButton';
-import { TactileBadge } from '@/components/ui/TactileBadge';
 
-export default function DoctorReportsPage() {
-  const [sessions, setSessions] = useState<AnalysisSession[]>([]);
-
-  useEffect(() => {
-    AppStateService.initSeedData();
-    setSessions(AppStateService.getAnalysisSessions());
-  }, []);
-
-  return (
-    <div className="flex flex-col gap-6">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight font-sans">
-              Clinical Decision Dossiers & Reports
-            </h1>
-            <TactileBadge variant="teal" size="sm">{sessions.length} Generated</TactileBadge>
-          </div>
-          <p className="text-xs text-slate-500 font-mono mt-1">
-            Archived physician reports with pharmacological mechanisms, ICD-10 contraindications, and evidence citations
-          </p>
-        </div>
-      </div>
-
-      {/* Reports List */}
-      <div className="flex flex-col gap-4 font-mono text-xs">
-        {sessions.map(s => (
-          <div
-            key={s.id}
-            className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-300 transition-all"
-          >
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-teal-50 text-teal-700 shrink-0">
-                <FileCheck className="w-5 h-5" />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-bold text-slate-900 text-base font-sans">
-                    Clinical Dossier #{s.id}
-                  </h3>
-                  <TactileBadge
-                    variant={s.overall_risk === 'MAJOR / SEVERE' ? 'red' : 'green'}
-                    size="sm"
-                    dot
-                  >
-                    {s.overall_risk}
-                  </TactileBadge>
-                </div>
-
-                <p className="text-slate-700 font-sans text-xs">
-                  Patient: <b>{s.patient_name}</b> (ID #{s.patient_id}) • Evaluated Regimen: {s.medications.map(m => m.generic_name).join(', ')}
-                </p>
-
-                <div className="flex items-center gap-4 text-slate-500 text-[11px] mt-1">
-                  <span>{s.interactions.length} DDI Matches</span>
-                  <span>•</span>
-                  <span>{s.contraindications.length} Disease Contraindications</span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> {s.created_at}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Link href="/patient/reports">
-                <TactileButton variant="primary" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-                  Open Clinician Dossier
-                </TactileButton>
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
-
-    </div>
-  );
+export default function DoctorReportsPage(){
+  const [reports,setReports]=useState<DoctorReport[]>([]);const [selectedId,setSelectedId]=useState('');const [loading,setLoading]=useState(true);const [error,setError]=useState('');
+  useEffect(()=>{fetch('/api/doctor/reports',{cache:'no-store'}).then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);setReports(b.reports||[]);setSelectedId(b.reports?.[0]?.id||'');}).catch(e=>setError(e.message||'Could not load reports.')).finally(()=>setLoading(false));},[]);
+  const selected=useMemo(()=>reports.find(r=>r.id===selectedId)||reports[0],[reports,selectedId]);
+  return <div className="space-y-6"><header className="rounded-2xl border bg-white p-6"><p className="text-xs font-semibold uppercase text-teal-700">Doctor workspace</p><h1 className="mt-2 text-2xl font-bold">Evidence-linked reports</h1><p className="mt-2 text-sm text-slate-600">Reports appear only while the patient’s approval remains active. Each version preserves the medicines, findings, missing pairs, and evidence references used when it was generated.</p></header>{error&&<p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}{loading?<p className="text-sm text-slate-500">Loading approved reports…</p>:reports.length===0?<div className="rounded-xl border border-dashed bg-white p-10 text-center"><FileCheck className="mx-auto h-8 w-8 text-slate-400"/><h2 className="mt-3 font-bold">No accessible reports</h2><p className="mt-1 text-sm text-slate-500">Generate a review for an approved patient first.</p><Link href="/doctor/analysis" className="mt-4 inline-block"><TactileButton>Open clinical review</TactileButton></Link></div>:<div className="grid gap-5 lg:grid-cols-[260px_1fr]"><aside className="no-print h-fit rounded-xl border bg-white p-3"><h2 className="px-2 py-2 text-sm font-bold">Report history</h2><div className="space-y-2">{reports.map(r=><button key={r.id} onClick={()=>setSelectedId(r.id)} className={`w-full rounded-lg border p-3 text-left ${selected?.id===r.id?'border-teal-300 bg-teal-50':'border-slate-200 hover:bg-slate-50'}`}><span className="block text-sm font-bold">{r.patient_name}</span><span className="mt-1 block text-xs text-slate-500">Version {r.version} · {new Date(r.created_at).toLocaleDateString()}</span></button>)}</div></aside>{selected&&<DoctorReportView report={selected}/>}</div>}</div>;
 }

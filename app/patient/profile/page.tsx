@@ -1,222 +1,48 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
-import { User, HeartPulse, ShieldCheck, Save, Mail, Phone, Calendar, Weight, Activity } from 'lucide-react';
-import { AppStateService } from '@/lib/store/appStore';
-import { Patient } from '@/types/database';
-import { BentoCard } from '@/components/ui/BentoCard';
-import { TactileButton } from '@/components/ui/TactileButton';
+import { useState } from 'react';
+import { usePatientProfile } from '@/lib/use-patient-profile';
+import type { PatientProfile } from '@/lib/patient-profile';
+import { ProfileState } from '@/components/patient/ProfileState';
 import { RecessedInput } from '@/components/ui/RecessedInput';
-import { TactileBadge } from '@/components/ui/TactileBadge';
-import { useToast } from '@/components/ui/ToastProvider';
+import { TactileButton } from '@/components/ui/TactileButton';
+import { markWorkspaceUpdated } from '@/lib/workspace-sync';
 
-export default function PatientProfilePage() {
-  const { success } = useToast();
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Form State
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [age, setAge] = useState('');
-  const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('Female');
-  const [bloodGroup, setBloodGroup] = useState('O+');
-  const [weight, setWeight] = useState('');
-  const [height, setHeight] = useState('');
-
-  useEffect(() => {
-    AppStateService.initSeedData();
-    const user = AppStateService.getCurrentUser();
-    const pId = user?.patient_id || 101;
-    const p = AppStateService.getPatientById(pId) || AppStateService.getPatients()[0];
-    if (p) {
-      setPatient(p);
-      setFullName(p.full_name);
-      setEmail(p.email);
-      setPhone(p.phone_number);
-      setAge(p.age.toString());
-      setDob(p.date_of_birth);
-      setGender(p.gender);
-      setBloodGroup(p.blood_group);
-      setWeight(p.weight.toString());
-      setHeight(p.height.toString());
-    }
-  }, []);
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!patient) return;
-    setIsSaving(true);
-
-    setTimeout(() => {
-      const updated: Patient = {
-        ...patient,
-        full_name: fullName,
-        email,
-        phone_number: phone,
-        age: parseInt(age) || patient.age,
-        date_of_birth: dob,
-        gender,
-        blood_group: bloodGroup,
-        weight: parseFloat(weight) || patient.weight,
-        height: parseFloat(height) || patient.height
-      };
-
-      AppStateService.updatePatient(updated);
-      setPatient(updated);
-      setIsSaving(false);
-      success('Profile Saved', 'Patient clinical parameters updated successfully.');
-    }, 600);
-  };
-
-  const bmi = (parseFloat(weight) && parseFloat(height))
-    ? (parseFloat(weight) / Math.pow(parseFloat(height) / 100, 2)).toFixed(1)
-    : '26.1';
-
-  return (
-    <div className="flex flex-col gap-6">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight font-sans">
-              Patient Clinical Profile
-            </h1>
-            <TactileBadge variant="teal" size="sm">Verified Patient</TactileBadge>
-          </div>
-          <p className="text-xs text-slate-500 font-mono mt-1">
-            Personal, demographic, and physiological parameters used in medication risk scoring
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSave} className="flex flex-col gap-6">
-        
-        {/* Personal Details */}
-        <BentoCard
-          title="Personal & Contact Information"
-          subtitle="Official patient registration details"
-          icon={<User className="w-5 h-5" />}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-            <RecessedInput
-              label="Full Name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
-            <RecessedInput
-              label="Email Address"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <RecessedInput
-              label="Phone Number"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-            <RecessedInput
-              label="Age (Years)"
-              type="number"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              required
-            />
-            <RecessedInput
-              label="Date of Birth"
-              type="date"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              required
-            />
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700 font-mono">Gender</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full py-2 px-3 text-sm rounded-lg bg-slate-50 border border-slate-200 text-slate-900 font-mono shadow-[inset_0_1px_2px_0_rgba(0,0,0,0.05)] focus:bg-white focus:outline-none"
-              >
-                <option value="Female">Female</option>
-                <option value="Male">Male</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-        </BentoCard>
-
-        {/* Physical & Physiological Parameters */}
-        <BentoCard
-          title="Physiological Parameters (Dosage Calculation)"
-          subtitle="Essential for renal clearance estimation and narrow therapeutic index adjustments"
-          icon={<HeartPulse className="w-5 h-5" />}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2">
-            <RecessedInput
-              label="Weight (kg)"
-              type="number"
-              step="0.1"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              required
-            />
-            <RecessedInput
-              label="Height (cm)"
-              type="number"
-              step="0.5"
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-              required
-            />
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700 font-mono">Blood Group</label>
-              <select
-                value={bloodGroup}
-                onChange={(e) => setBloodGroup(e.target.value)}
-                className="w-full py-2 px-3 text-sm rounded-lg bg-slate-50 border border-slate-200 text-slate-900 font-mono shadow-[inset_0_1px_2px_0_rgba(0,0,0,0.05)] focus:bg-white focus:outline-none"
-              >
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-              </select>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-50/70 border border-blue-200/80 flex flex-col justify-between">
-              <span className="text-[10px] font-mono uppercase font-bold text-blue-700">Calculated BMI</span>
-              <span className="text-xl font-bold font-mono text-blue-900">{bmi} kg/m²</span>
-              <span className="text-[10px] font-mono text-blue-600">Standard Body Surface Area</span>
-            </div>
-          </div>
-        </BentoCard>
-
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <TactileButton
-            variant="primary"
-            size="lg"
-            type="submit"
-            isLoading={isSaving}
-            leftIcon={<Save className="w-4 h-4" />}
-          >
-            Save Clinical Profile
-          </TactileButton>
-        </div>
-
-      </form>
-
+function ProfileForm({ profile, saved }: { profile: PatientProfile; saved: () => Promise<void> }) {
+  const [form, setForm] = useState({ full_name: profile.full_name, phone: profile.phone || '', date_of_birth: profile.date_of_birth || '', gender: profile.gender || '', blood_group: profile.blood_group || '', height_cm: profile.height_cm?.toString() || '', weight_kg: profile.weight_kg?.toString() || '' });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const field = (key: keyof typeof form) => ({ value: form[key], onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { setForm({ ...form, [key]: e.target.value }); setMessage(''); } });
+  async function submit(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setError(''); setMessage('');
+    try {
+      const response = await fetch('/api/patient/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, height_cm: form.height_cm === '' ? null : Number(form.height_cm), weight_kg: form.weight_kg === '' ? null : Number(form.weight_kg) }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to save your profile.');
+      await saved();
+      markWorkspaceUpdated('patient');
+    } catch (error) { setError(error instanceof Error ? error.message : 'Unable to save your profile.'); }
+    finally { setBusy(false); }
+  }
+  return <form onSubmit={submit} className="space-y-5 rounded-xl border border-slate-200 bg-white p-6">
+    <p className="text-sm text-slate-500">Only enter details you want to save. Optional fields can be left blank.</p>
+    {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+    {message && <p role="status" className="text-sm text-emerald-700">{message}</p>}
+    <div className="grid gap-5 sm:grid-cols-2">
+      <RecessedInput label="Full name" required maxLength={120} autoComplete="name" {...field('full_name')} />
+      <RecessedInput label="Phone" type="tel" autoComplete="tel" maxLength={30} {...field('phone')} />
+      <RecessedInput label="Date of birth" type="date" min="1900-01-01" max={new Date().toISOString().slice(0, 10)} {...field('date_of_birth')} />
+      <RecessedInput label="Gender" maxLength={40} {...field('gender')} />
+      <RecessedInput label="Height (cm)" type="number" min="0.1" max="300" step="0.1" {...field('height_cm')} />
+      <RecessedInput label="Weight (kg)" type="number" min="0.1" max="700" step="0.1" {...field('weight_kg')} />
+      <label className="flex flex-col gap-2 text-xs font-semibold text-slate-700">Blood group<select {...field('blood_group')} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"><option value="">Not provided</option>{['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(value => <option key={value}>{value}</option>)}</select></label>
     </div>
-  );
+    <TactileButton type="submit" isLoading={busy}>Save profile</TactileButton>
+  </form>;
+}
+export default function PatientProfilePage() {
+  const { profile, loading, error, reload } = usePatientProfile();
+  const [saved, setSaved] = useState(false);
+  if (loading || error || !profile) return <ProfileState loading={loading} error={error} retry={reload} />;
+  return <div className="space-y-5"><h1 className="text-2xl font-bold">My health profile</h1>{saved && <p role="status" className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">Your profile has been saved.</p>}<ProfileForm key={profile.updated_at} profile={profile} saved={async () => { await reload(); setSaved(true); }} /></div>;
 }
