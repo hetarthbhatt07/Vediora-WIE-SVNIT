@@ -33,7 +33,7 @@ The `mistral-medicine-explanation` generation uses the local Ollama model config
 
 The application validates structured JSON from Mistral, then builds the final database-findings and safety sections from deterministic application data. The latest 10 messages from the current conversation let Mistral resolve follow-up wording. Relevant patient comparison questions are expanded with saved active medicines before pair construction, and the response names the medicines that were added. A medical question can be answered even when it contains no recognized medicine. Unknown or unrelated questions must return a polite unsupported response. If Ollama is unavailable, the API returns the database-only fallback and records the generation error instead of inventing an answer.
 
-The current local 12.2B model took roughly 40 seconds for one medicine and 92 seconds for a three-medicine test on this machine. Vediora currently defaults to CPU inference because this workstation's Ollama CUDA runner fails during initialization. Set `OLLAMA_NUM_GPU` only after the local GPU runtime is repaired. The exact time depends on available CPU/GPU and whether the model is warm.
+The current local 12.2B model uses a stable partial GPU offload on the development workstation. The latest four-turn production sequence completed each answer in about 53 to 78 seconds. The exact time depends on hardware, the configured private `OLLAMA_NUM_GPU` value, prompt length, and whether the model is warm. If Ollama fails or times out, Vediora returns the deterministic database fallback and records the generation error.
 
 ## Privacy boundary
 

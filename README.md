@@ -43,6 +43,18 @@ These areas remain outside the connected release:
 
 Doctor registration details are currently self-declared. Do not treat a doctor account as independently verified.
 
+## Project documentation
+
+Use these text files to review, demonstrate, and understand the connected project:
+
+| Material | Purpose |
+| --- | --- |
+| [Connected demo walkthrough](Walkthrough.md) | Patient, doctor, consent, chat, and evidence-report demonstration flow |
+| [Implementation status](docs/implementation-status.md) | Connected features, verification, limitations, and next milestone |
+| [Langfuse tracing guide](docs/langfuse-tracing.md) | Medicine-chat trace structure and privacy boundary |
+
+Presentations, PDFs, private environment files, database exports, project memory, local logs, and source documents containing personal contact information are intentionally excluded from Git.
+
 ## How the system works
 
 The browser uses Supabase Authentication for identity. Next.js server routes read and update PostgreSQL through the Supabase session pooler. Chat routes retrieve medicine and interaction records before calling the local Ollama service for an explanation.
@@ -90,19 +102,21 @@ flowchart LR
 
 ## Repository structure
 
-The main directories separate pages, reusable components, database migrations, server logic, and automated checks:
+The main directories separate pages, reusable components, database migrations, server logic, documentation, and automated checks:
 
 ```text
 Vediora-WIE-SVNIT/
-├── app/                  Next.js pages, layouts, and API routes
-├── components/           Shared interface components
-├── lib/                  Auth, database, chat, reports, and domain logic
-├── supabase/migrations/  Additive PostgreSQL migrations
-├── tests/                Unit and Playwright browser tests
-├── docs/                 Implementation and architecture notes
-├── public/               Static assets
-├── .env.example          Environment variable template
-└── package.json          Bun scripts and dependencies
+|-- app/                  Next.js pages, layouts, and API routes
+|-- components/           Shared interface components
+|-- lib/                  Auth, database, chat, reports, and domain logic
+|-- services/             Prototype clinical service modules
+|-- supabase/migrations/  Additive PostgreSQL migrations
+|-- tests/                Unit and Playwright browser tests
+|-- docs/                 Implementation status and tracing guidance
+|-- scripts/              Local migration, verification, and demo helpers
+|-- .env.example          Environment variable template
+|-- .gitignore            Private and generated file exclusions
+`-- package.json          Bun scripts and dependencies
 ```
 
 ## Run Vediora locally
