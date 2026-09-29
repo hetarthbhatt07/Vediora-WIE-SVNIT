@@ -13,7 +13,7 @@ export interface BrandLogoProps {
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
   size = 'md',
-  showBadge = true,
+  showBadge = false,
   clickable = true,
   className,
 }) => {

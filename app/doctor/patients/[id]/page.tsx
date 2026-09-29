@@ -1,237 +1,43 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { 
-  User, HeartPulse, ShieldAlert, Pill, FileText, 
-  Stethoscope, ArrowLeft, ArrowRight, Sparkles, AlertTriangle, 
-  Calendar, CheckCircle2, RefreshCw, FileCheck
-} from 'lucide-react';
-import { AppStateService } from '@/lib/store/appStore';
-import { Patient, PatientCondition, PatientAllergy, Prescription, AnalysisSession } from '@/types/database';
+import { useParams } from 'next/navigation';
+import { ArrowLeft, FileText, HeartPulse, Mail, Pill, ShieldCheck, User } from 'lucide-react';
 import { BentoCard } from '@/components/ui/BentoCard';
 import { TactileButton } from '@/components/ui/TactileButton';
-import { TactileBadge } from '@/components/ui/TactileBadge';
+
+interface Patient {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  blood_group: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  updated_at: string;
+}
+
+interface Medicine { id: string; medicine_name: string; brand_name: string | null; rxcui: string | null; dosage: string | null; frequency: string | null; notes: string | null; started_at: string | null; }
+interface Prescription { id: string; prescriber_name: string | null; prescribed_on: string | null; created_at: string; items: Array<{ medicine_name: string; dosage: string | null; frequency: string | null }>; }
+interface Report { id: string; version: number; overall_severity: string; summary: string; generator_role: string | null; created_at: string; }
 
 export default function PatientDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const patientId = parseInt(params.id as string) || 101;
-
+  const { id } = useParams<{ id: string }>();
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [conditions, setConditions] = useState<PatientCondition[]>([]);
-  const [allergies, setAllergies] = useState<PatientAllergy[]>([]);
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [analyses, setAnalyses] = useState<AnalysisSession[]>([]);
-
-  useEffect(() => {
-    AppStateService.initSeedData();
-    const p = AppStateService.getPatientById(patientId) || AppStateService.getPatients()[0];
-    setPatient(p);
-    if (p) {
-      setConditions(AppStateService.getPatientConditions(p.patient_id));
-      setAllergies(AppStateService.getPatientAllergies(p.patient_id));
-      setPrescriptions(AppStateService.getPrescriptions(p.patient_id));
-      setAnalyses(AppStateService.getAnalysisSessions(p.patient_id));
-    }
-  }, [patientId]);
-
-  if (!patient) {
-    return (
-      <div className="p-12 text-center flex flex-col items-center gap-3">
-        <RefreshCw className="w-8 h-8 text-[#2563EB] animate-spin" />
-        <p className="text-xs font-mono text-slate-500">Loading Patient 360 Record...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      
-      {/* Top Header */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/doctor/patients">
-            <button className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </Link>
-
-          <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 font-bold text-2xl flex items-center justify-center border border-teal-200 shadow-xs">
-            {patient.full_name.charAt(0)}
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight font-sans">
-                {patient.full_name}
-              </h1>
-              <TactileBadge variant="teal" size="sm">Patient 360 Record</TactileBadge>
-              <TactileBadge variant="blue" size="sm">ID #{patient.patient_id}</TactileBadge>
-            </div>
-            <p className="text-xs text-slate-500 font-mono mt-1">
-              Age: {patient.age} • {patient.gender} • DOB: {patient.date_of_birth} • Weight: {patient.weight}kg • Height: {patient.height}cm • Blood: {patient.blood_group}
-            </p>
-          </div>
-        </div>
-
-        {/* 1-Click Clinical Review CTA */}
-        <Link href="/doctor/analysis">
-          <TactileButton
-            variant="success"
-            size="md"
-            leftIcon={<Stethoscope className="w-4 h-4" />}
-            rightIcon={<Sparkles className="w-3.5 h-3.5" />}
-          >
-            Initiate Clinical Safety Review
-          </TactileButton>
-        </Link>
-      </div>
-
-      {/* 2-Column Clinical Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono text-xs">
-        
-        {/* Left 2 Columns */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          
-          {/* Active Diagnosed Conditions */}
-          <BentoCard
-            title="Diagnosed Medical Conditions (ICD-10)"
-            subtitle="Cross-matched against medication contraindications"
-            icon={<HeartPulse className="w-5 h-5 text-teal-600" />}
-          >
-            <div className="divide-y divide-slate-100">
-              {conditions.map(c => (
-                <div key={c.patient_condition_id} className="py-3 flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-sm font-sans">
-                        {c.medical_condition?.condition_name}
-                      </span>
-                      <TactileBadge variant="teal" size="sm">
-                        {c.medical_condition?.icd10_code}
-                      </TactileBadge>
-                      <TactileBadge variant={c.status === 'Active' ? 'red' : 'green'} size="sm">
-                        {c.status}
-                      </TactileBadge>
-                    </div>
-                    <p className="text-slate-600 mt-1 leading-relaxed">
-                      {c.notes || c.medical_condition?.description}
-                    </p>
-                  </div>
-                  <span className="text-slate-400 text-[10px] shrink-0">
-                    Diagnosed: {c.diagnosed_on}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </BentoCard>
-
-          {/* Active Medication Regimen */}
-          <BentoCard
-            title="Active Prescription Medications"
-            subtitle="RxNorm standardized formulations"
-            icon={<Pill className="w-5 h-5 text-blue-600" />}
-          >
-            <div className="divide-y divide-slate-100">
-              <div className="py-3 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-900 text-sm font-sans">Warfarin (Coumadin) 5mg</h4>
-                  <p className="text-slate-600">1 tablet orally once daily at 6 PM • RxCUI: 11289</p>
-                </div>
-                <TactileBadge variant="blue" size="sm">Anticoagulant</TactileBadge>
-              </div>
-
-              <div className="py-3 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-900 text-sm font-sans">Ibuprofen (Advil) 400mg</h4>
-                  <p className="text-slate-600">1 tablet PO PRN for joint pain • RxCUI: 5640</p>
-                </div>
-                <TactileBadge variant="red" size="sm">Flagged Bleeding Risk</TactileBadge>
-              </div>
-
-              <div className="py-3 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-900 text-sm font-sans">Lisinopril (Prinivil) 10mg</h4>
-                  <p className="text-slate-600">1 tablet PO every morning for BP • RxCUI: 29046</p>
-                </div>
-                <TactileBadge variant="teal" size="sm">ACE Inhibitor</TactileBadge>
-              </div>
-            </div>
-          </BentoCard>
-
-          {/* Ingested Prescriptions Archive */}
-          <BentoCard
-            title="Prescription Archival Documents"
-            subtitle="Ingested doctor prescriptions with OCR text transcripts"
-            icon={<FileText className="w-5 h-5" />}
-          >
-            <div className="divide-y divide-slate-100">
-              {prescriptions.map(rx => (
-                <div key={rx.prescription_id} className="py-3 flex items-center justify-between gap-3">
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm font-sans">{rx.doctor_name}</h4>
-                    <p className="text-slate-500">{rx.hospital_name} • Date: {rx.prescription_date}</p>
-                    <p className="text-slate-600 text-[11px] mt-1 bg-slate-50 p-2 rounded">
-                      OCR: {rx.ocr_text}
-                    </p>
-                  </div>
-                  <TactileBadge variant="blue" size="sm">Verified</TactileBadge>
-                </div>
-              ))}
-            </div>
-          </BentoCard>
-
-        </div>
-
-        {/* Right 1 Column */}
-        <div className="flex flex-col gap-6">
-          
-          {/* Allergies */}
-          <BentoCard
-            title="Allergies & Sensitivities"
-            subtitle="Cross-screened substances"
-            icon={<ShieldAlert className="w-5 h-5 text-red-600" />}
-          >
-            <div className="flex flex-col gap-2.5">
-              {allergies.map(a => (
-                <div key={a.id} className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-900 flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 font-sans text-xs">{a.allergen_name}</span>
-                    <TactileBadge variant="red" size="sm">{a.severity}</TactileBadge>
-                  </div>
-                  <span className="text-[11px] text-slate-700">Reaction: {a.reaction}</span>
-                </div>
-              ))}
-            </div>
-          </BentoCard>
-
-          {/* Previous Clinical Reports */}
-          <BentoCard
-            title="Safety Audits & Reports"
-            subtitle="Longitudinal decision records"
-            icon={<FileCheck className="w-5 h-5 text-teal-600" />}
-          >
-            <div className="flex flex-col gap-2.5">
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-slate-900 block font-sans">Major Interaction Flag</span>
-                  <span className="text-slate-400 text-[10px]">Warfarin + Ibuprofen</span>
-                </div>
-                <Link href="/patient/reports">
-                  <TactileButton variant="outline" size="sm">
-                    View Dossier
-                  </TactileButton>
-                </Link>
-              </div>
-            </div>
-          </BentoCard>
-
-        </div>
-
-      </div>
-
-    </div>
-  );
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  useEffect(() => { fetch(`/api/doctor/patients/${encodeURIComponent(id)}`, { cache: 'no-store' }).then(async response => { const body = await response.json(); if (!response.ok) throw new Error(body.error); setPatient(body.patient); setMedicines(body.medicines || []); setPrescriptions(body.prescriptions || []); setReports(body.reports || []); }).catch(error => setError(error.message || 'Could not load patient profile.')).finally(() => setLoading(false)); }, [id]);
+  if (loading) return <p role="status" className="p-8 text-slate-500">Loading the current patient profile…</p>;
+  if (!patient) return <div className="rounded-xl border border-red-200 bg-white p-6"><p role="alert" className="text-red-700">{error || 'Patient access is unavailable.'}</p><Link href="/doctor/patients" className="mt-4 inline-block"><TactileButton variant="secondary">Back to approved patients</TactileButton></Link></div>;
+  return <div className="space-y-6"><header className="rounded-2xl border bg-white p-6"><Link href="/doctor/patients" className="mb-4 inline-flex items-center gap-2 text-sm text-blue-600"><ArrowLeft className="h-4 w-4" />Approved patients</Link><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-wide text-teal-700">Current patient profile</p><h1 className="mt-2 text-2xl font-bold">{patient.full_name}</h1><p className="mt-2 text-sm text-slate-500">Loaded from Supabase after checking active patient consent.</p></div><span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"><ShieldCheck className="h-4 w-4" />Access approved</span></div></header>
+    <div className="grid gap-5 md:grid-cols-2"><BentoCard title="Identity and contact" icon={<User className="h-5 w-5" />}><dl className="grid grid-cols-2 gap-3 text-sm"><dt className="text-slate-500">Email</dt><dd className="break-all">{patient.email}</dd><dt className="text-slate-500">Phone</dt><dd>{patient.phone || 'Not provided'}</dd><dt className="text-slate-500">Date of birth</dt><dd>{patient.date_of_birth || 'Not provided'}</dd><dt className="text-slate-500">Gender</dt><dd>{patient.gender || 'Not provided'}</dd></dl></BentoCard><BentoCard title="Recorded measurements" icon={<HeartPulse className="h-5 w-5" />}><dl className="grid grid-cols-2 gap-3 text-sm"><dt className="text-slate-500">Blood group</dt><dd>{patient.blood_group || 'Not provided'}</dd><dt className="text-slate-500">Height</dt><dd>{patient.height_cm == null ? 'Not provided' : `${patient.height_cm} cm`}</dd><dt className="text-slate-500">Weight</dt><dd>{patient.weight_kg == null ? 'Not provided' : `${patient.weight_kg} kg`}</dd><dt className="text-slate-500">Last updated</dt><dd>{new Date(patient.updated_at).toLocaleString()}</dd></dl></BentoCard></div>
+    <div className="grid gap-5 md:grid-cols-2"><BentoCard title="Active medicines" icon={<Pill className="h-5 w-5" />}>{medicines.length === 0 ? <p className="text-sm text-slate-500">The patient has not saved any active medicines.</p> : <div className="divide-y divide-slate-100">{medicines.map(item => <div key={item.id} className="py-3"><p className="font-semibold text-slate-900">{item.medicine_name}{item.brand_name ? ` (${item.brand_name})` : ''}</p><p className="mt-1 text-xs text-slate-500">{item.dosage || 'Dose not provided'} · {item.frequency || 'Frequency not provided'} · RxCUI {item.rxcui || 'not recorded'}</p>{item.notes && <p className="mt-1 text-sm text-slate-600">{item.notes}</p>}</div>)}</div>}</BentoCard><BentoCard title="Confirmed prescriptions" icon={<FileText className="h-5 w-5" />}>{prescriptions.length===0?<p className="text-sm text-slate-500">No confirmed prescriptions are saved.</p>:<div className="divide-y divide-slate-100">{prescriptions.slice(0,5).map(item=><div key={item.id} className="py-3"><p className="font-semibold">{item.prescriber_name||'Prescription record'}</p><p className="mt-1 text-xs text-slate-500">{item.prescribed_on||new Date(item.created_at).toLocaleDateString()} · {item.items.map(medicine=>medicine.medicine_name).join(', ')}</p></div>)}</div>}</BentoCard></div>
+    <BentoCard title="Evidence report history" icon={<ShieldCheck className="h-5 w-5" />}>{reports.length===0?<p className="text-sm text-slate-500">No evidence reports have been generated for this patient.</p>:<div className="divide-y divide-slate-100">{reports.slice(0,5).map(report=><div key={report.id} className="flex flex-wrap items-start justify-between gap-3 py-3"><div><p className="font-semibold">Version {report.version} · {report.overall_severity}</p><p className="mt-1 max-w-2xl text-xs text-slate-500">{report.summary}</p></div><span className="text-xs text-slate-400">{new Date(report.created_at).toLocaleDateString()}</span></div>)}</div>}<div className="mt-4 flex gap-3"><Link href={`/doctor/analysis?patient=${patient.id}`}><TactileButton size="sm">Run review</TactileButton></Link><Link href="/doctor/reports"><TactileButton size="sm" variant="secondary">Open all reports</TactileButton></Link></div></BentoCard>
+    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><Mail className="mr-2 inline h-4 w-4" />Profile edits made by the patient are read from the same database and appear the next time this page loads. If the patient revokes access, this endpoint returns no profile.</div>
+  </div>;
 }

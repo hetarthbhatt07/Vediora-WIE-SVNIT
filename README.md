@@ -1,423 +1,308 @@
 <div align="center">
 
-<br/>
+# Vediora
 
-<img src="https://img.shields.io/badge/MedSafe_AI-Intelligent_Drug_Safety-2563EB?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyTDMgN3YxMGw5IDUgOS01VjdsLTktNXptMCAyLjI0TDE5LjMgOC41IDEyIDE0IDE0LjcgOC41IDEyIDQuMjR6Ii8+PC9zdmc+" alt="MedSafe AI"/>
+### Medication safety and consent-based clinical collaboration
 
-# 🏥 MedSafe AI
-## Intelligent Medication Safety & Drug Interaction Platform
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Auth%20%2B%20Postgres-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Ollama](https://img.shields.io/badge/Ollama-Local%20Mistral-111111)](https://ollama.com/)
+[![Bun](https://img.shields.io/badge/Bun-1.4%2B-FBF0DF?logo=bun&logoColor=000000)](https://bun.sh/)
 
-**IEEE WIE ILS 2026**
-
----
-
-[![Next.js](https://img.shields.io/badge/Next.js-14+-000000?style=flat-square&logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactjs.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Tesseract.js](https://img.shields.io/badge/Tesseract.js-v5-FF6F61?style=flat-square)](https://tesseract.projectnaptha.com)
-[![RxNorm](https://img.shields.io/badge/RxNorm-API-4CAF50?style=flat-square)](https://www.nlm.nih.gov/research/umls/rxnorm)
-[![Build](https://img.shields.io/badge/Build-31_Routes_Verified-22C55E?style=flat-square&logo=vercel)](https://github.com/hetarthbhatt07/WIE-SVNIT-FN)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
-
-<br/>
-
-> **Preventing adverse drug events before they happen.**
->
-> MedSafe AI is a production-grade, full-stack clinical decision support platform that combines  
-> Neural OCR, RxNorm normalization, deterministic safety matrices, and AI reasoning  
-> to deliver real-time medication safety intelligence to patients and healthcare professionals.
-
-<br/>
-
----
-
-## 👥 Team VEDIORA
-
-**🏫 Institution:** LDRP Institute of Technology and Research
-
-| # | Name | Role |
-|:--|:-----|:-----|
-| 👑 | **Darji Avani Rajendrabhai** | Team Leader |
-| 🥈 | **Darji Janvi Navinbhai** | Co-Leader |
-| 🧑‍💻 | **Dobariya Bhavarth Jitendra** | Member |
-| 🧑‍💻 | **Shaikh Ayanuddin Ayazuddin** | Member |
-| 🧑‍💻 | **Kunj Shaileshbhai Darji** | Member |
-| 🧑‍💻 | **Hetarth Umang Bhatt** | Member |
-
-<br/>
+Vediora connects patient-managed health records, doctor consent, medication interaction data, local artificial intelligence, and versioned evidence reports in one web application.
 
 </div>
 
----
+## What Vediora does
 
-## 📋 Table of Contents
+Vediora helps patients organize medication information and decide which doctors may access it. Doctors can request access, review approved patient records, check medicine interactions, and save evidence reports. The medical chat combines imported database records with a locally hosted Mistral model through Ollama.
 
-| # | Section |
-|:--|:--------|
-| 1 | [🎯 Project Objective](#-project-objective) |
-| 2 | [✨ Key Features](#-key-features) |
-| 3 | [🛠️ Technology Stack](#%EF%B8%8F-technology-stack) |
-| 4 | [⚙️ Setup & Installation](#%EF%B8%8F-setup--installation) |
-| 5 | [📊 Implementation Status](#-implementation-status) |
-| 6 | [🗺️ Complete Route Directory](#%EF%B8%8F-complete-route-directory) |
-| 7 | [📐 System Architecture](#-system-architecture) |
-| 8 | [🗄️ Database Schema](#%EF%B8%8F-database-schema) |
-| 9 | [⚖️ Disclaimer](#%EF%B8%8F-medical--regulatory-disclaimer) |
+The application treats database interaction records as authoritative. A missing record never means that a medicine combination is safe.
 
----
+## Current implementation
 
-## 🎯 Project Objective
+The connected application includes these workflows:
 
-Adverse drug events (ADEs) affect **125,000 patients annually** and account for over **$3.5 billion** in preventable healthcare costs in India alone. Medication errors from dangerous drug-drug interactions (DDIs) and disease contraindications remain a leading cause of preventable hospital admissions.
+| Area | Available functionality |
+| --- | --- |
+| Authentication | Email sign-up, sign-in, callback handling, password recovery, password reset, and sign-out |
+| Patient workspace | Dashboard, health profile, medicine list, prescription records, evidence reports, doctor access, and medical chat |
+| Doctor workspace | Dashboard, doctor profile, access requests, approved patients, clinical medicine review, evidence reports, and medical chat |
+| Consent | Doctors request access by patient email; patients approve, deny, or revoke access |
+| Medicine chat | Saved conversations, new chats, follow-up context, multiple medicine names, database interaction checks, and local Mistral explanations |
+| Reports | Versioned patient and doctor evidence reports linked to current medication findings |
+| Observability | Optional Langfuse traces for the chat pipeline |
 
-**MedSafe AI** addresses this gap by providing an intelligent, automated clinical decision-support system that:
+These areas remain outside the connected release:
 
-- 🔬 **Analyzes prescriptions** using multi-stage OCR and RxNorm canonical normalization
-- ⚡ **Detects interactions** via a deterministic pairwise DDI safety matrix (WHO/FDA evidence-graded)
-- 🛡️ **Flags contraindications** against WHO ICD-10 disease registries and patient allergy profiles
-- 📋 **Generates dual-recipient reports** — plain English summaries for patients and pharmacological dossiers for physicians
-- 🔐 **Maintains an immutable audit trail** compliant with HIPAA and CDSCO regulatory frameworks
+- Prescription optical character recognition (OCR)
+- Automated condition and allergy contraindication rules
+- Administrative doctor verification screens
+- External hosted large language model APIs
 
-> *"Between the prescription pad and the patient, MedSafe AI is the safety net."*
+Doctor registration details are currently self-declared. Do not treat a doctor account as independently verified.
 
----
+## How the system works
 
-## ✨ Key Features
+The browser uses Supabase Authentication for identity. Next.js server routes read and update PostgreSQL through the Supabase session pooler. Chat routes retrieve medicine and interaction records before calling the local Ollama service for an explanation.
 
-<details open>
-<summary><b>🩻 Multi-Source Prescription Ingestion Pipeline</b></summary>
-<br/>
+```mermaid
+flowchart LR
+    Browser[Patient or doctor browser]
+    App[Next.js application]
+    Auth[Supabase Authentication]
+    API[Next.js server routes]
+    DB[(Supabase PostgreSQL)]
+    Ollama[Local Ollama and Mistral]
+    Trace[Optional Langfuse tracing]
 
-| Mode | Description |
-|:-----|:------------|
-| 📄 **OCR Upload** | Drag-and-drop JPG/PNG/PDF with 5-stage bilateral pre-processing (denoising, deskewing, Otsu binarization) |
-| 🔍 **Manual Search** | Live RxNorm concept autocomplete with brand-to-generic resolution and RxCUI indexing |
-| 📦 **Package Scanner** | Optical medicine package scanning with OCR-assisted compound extraction |
-
-</details>
-
-<details open>
-<summary><b>💊 RxNorm Canonical Normalization Engine</b></summary>
-<br/>
-
-Standardizes brand names (e.g. *Coumadin → Warfarin*, *Advil → Ibuprofen*, *Glucophage → Metformin*) into:
-- ✅ Generic compounds with RxCUI codes
-- ✅ Standard dosage forms and administration routes
-- ✅ ATC pharmacological class classification
-
-</details>
-
-<details open>
-<summary><b>⚠️ Clinical Interaction & Avoidance Engine</b></summary>
-<br/>
-
-| Engine | Capability |
-|:-------|:-----------|
-| 🔴 **Pairwise DDI Matrix** | Combinatorial evaluation of every drug pair in the regimen |
-| 🟡 **Severity Classification** | `LOW / NONE` → `MODERATE` → `MAJOR / SEVERE` |
-| 🟠 **Drug Avoidance Detector** | Flags hazardous compounds and recommends safer therapeutic alternatives |
-| 🟣 **ICD-10 Contraindication Check** | Cross-references active conditions (WHO ICD-10) with drug database |
-| 🔵 **Allergy Cross-Screener** | Validates prescriptions against patient hypersensitivity registries |
-
-</details>
-
-<details open>
-<summary><b>📑 Dual-Recipient Clinical Reports</b></summary>
-<br/>
-
-| Report Type | Audience | Contents |
-|:------------|:---------|:---------|
-| 👤 **Patient Friendly Report** | Patient | Plain English explanation, medication schedule, food guidelines, safety warnings |
-| 🩺 **Physician Dossier** | Doctor | Pharmacological mechanisms, ICD-10 codes, monitoring parameters, PubMed/FDA citations |
-
-Both reports support native 1-click **Print / PDF export**.
-
-</details>
-
-<details open>
-<summary><b>🏢 Role-Based Clinical Workspaces (3 Portals)</b></summary>
-<br/>
-
-| Portal | Users | Key Capabilities |
-|:-------|:------|:----------------|
-| 🟦 **Patient Portal** | Patients | Dashboard, Health Profile, Medications, Prescriptions, OCR Analysis, Safety Reports |
-| 🟩 **Doctor Portal** | Physicians | Patient 360 Records, Multi-Drug Workbench, Clinical Dossiers, Critical Alerts |
-| 🟥 **Admin Workspace** | Administrators | Live System Telemetry, Clinical Knowledge Catalog, Patient Registry, Audit Ledger |
-
-</details>
-
-<details>
-<summary><b>🔐 Regulatory Audit Logging & Security</b></summary>
-<br/>
-
-- Immutable **HIPAA/CDSCO-compliant** decision logs with evidence citations (FDA, CHEST, CPIC)
-- **DigiLocker / ABHA** National Health ID gateway integration
-- Role-based access control with session management
-
-</details>
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technology | Purpose |
-|:------|:-----------|:--------|
-| **Framework** | Next.js 14+ (App Router) | Full-stack React framework with SSR/SSG |
-| **Language** | TypeScript 5.0 | Type-safe application code |
-| **Styling** | Tailwind CSS + Paperweight Tactile UI | `#FAFAFA` canvas, `#2563EB` blueprint blue, tactile bevel physics |
-| **Icons** | Lucide React | Consistent clinical iconography |
-| **OCR Engine** | Tesseract.js v5 | Neural optical character recognition with bilateral preprocessing |
-| **Drug Database** | RxNorm / FDA Open Data | Canonical drug normalization and interaction evidence |
-| **Data Layer** | Reactive Local Store | Seed datasets from `data.csv` with full localStorage persistence |
-| **Reporting** | Browser Print API | Native print/PDF with dedicated media stylesheets |
-| **Architecture** | `FINAL_SVNIT_ARCHITECTURE.drawio.svg` | 9-stage clinical decision pipeline |
-
-### Design System: Paperweight Tactile UI
-```
-Canvas Color  ─── #FAFAFA  (Blueprint paper white)
-Primary Blue  ─── #2563EB  (Clinical action blue)
-Bevel Effect  ─── shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4)]
-Click Physics ─── active:scale-[0.98] transition-transform
-Font Families ─── Inter (sans) + JetBrains Mono (mono)
+    Browser --> App
+    App --> Auth
+    App --> API
+    API --> DB
+    API --> Ollama
+    API -.-> Trace
 ```
 
----
+### Medication answer flow
 
-## ⚙️ Setup & Installation
+1. The server resolves medicine names and aliases against the imported drug data.
+2. It checks every recognized medicine pair against the interaction table.
+3. It loads relevant saved medicines and recent messages when the current conversation needs context.
+4. Local Mistral explains medicine information and database findings in readable language.
+5. The response separates documented interactions, missing records, and model knowledge.
+6. Langfuse records each stage when its environment variables are configured.
 
-### Prerequisites
+## Technology stack
 
+| Layer | Technology |
+| --- | --- |
+| Web application | Next.js 15 App Router and React 18 |
+| Language | TypeScript 5.6 |
+| Styling | Tailwind CSS 3.4 |
+| Authentication | Supabase Auth with server-side rendering helpers |
+| Database | Supabase PostgreSQL through the session pooler |
+| Local model | Ollama with `mistral-nemo:12b` |
+| Observability | Langfuse, optional |
+| Package manager | Bun |
+| Testing | Bun test runner and Playwright |
+
+## Repository structure
+
+The main directories separate pages, reusable components, database migrations, server logic, and automated checks:
+
+```text
+Vediora-WIE-SVNIT/
+├── app/                  Next.js pages, layouts, and API routes
+├── components/           Shared interface components
+├── lib/                  Auth, database, chat, reports, and domain logic
+├── supabase/migrations/  Additive PostgreSQL migrations
+├── tests/                Unit and Playwright browser tests
+├── docs/                 Implementation and architecture notes
+├── public/               Static assets
+├── .env.example          Environment variable template
+└── package.json          Bun scripts and dependencies
 ```
-Node.js  ≥  18.x
-npm      ≥  8.x
-```
 
-### Quick Start
+## Run Vediora locally
+
+You need [Bun](https://bun.sh/), a [Supabase](https://supabase.com/) project, and [Ollama](https://ollama.com/) before starting the app.
+
+### 1. Clone the project branch
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/hetarthbhatt07/WIE-SVNIT-FN.git
-cd WIE-SVNIT-FN
-
-# 2. Install dependencies
-npm install
-
-# 3. Start the development server
-npm run dev
-
-# 4. Open your browser
-open http://localhost:3000
+git clone --branch final-project-kunj --single-branch \
+  https://github.com/hetarthbhatt07/Vediora-WIE-SVNIT.git
+cd Vediora-WIE-SVNIT
 ```
 
-> **Production Build**
-> ```bash
-> npm run build   # Compiles 31 routes with 0 errors ✓
-> ```
+### 2. Install dependencies
 
-### 🔑 Pre-Configured Demo Accounts
-
-| Role | Email | Password | Workspace |
-|:-----|:------|:---------|:----------|
-| 🟦 **Patient** | `patient@medsafe.in` | `start123` | `/patient/dashboard` |
-| 🟩 **Doctor** | `doctor@medsafe.in` | `start123` | `/doctor/dashboard` |
-| 🟥 **Admin** | `admin@medsafe.in` | `start123` | `/admin/system-health` |
-
-> **Demo patient is pre-loaded with:** Warfarin + Ibuprofen (Major DDI), Peptic Ulcer Disease (ICD-10: K27), and 2 ingested OCR prescriptions — so every feature is immediately demonstrable.
-
----
-
-## 📊 Implementation Status
-
-```
-Total Routes Compiled ───── 31 / 31   ✅
-Build Errors ────────────── 0         ✅
-Type Errors ─────────────── 0         ✅
-Patient Portal Pages ─────── 11 / 11  ✅
-Doctor Portal Pages ──────── 8 / 8    ✅
-Admin Workspace Pages ─────── 6 / 6    ✅
+```bash
+bun install
 ```
 
-| # | Milestone | Status | Details |
-|:--|:----------|:------:|:--------|
-| 1 | **Paperweight Tactile UI Design System** | ✅ | `#FAFAFA` canvas, bevel highlights, pressed physics, blueprint grid |
-| 2 | **Clinical Knowledge Layer** | ✅ | 25+ standard drugs, 12+ DDI rules, ICD-10 contraindications seeded |
-| 3 | **RxNorm Normalization Service** | ✅ | Brand-to-generic mapping, RxCUI concept index, autocomplete |
-| 4 | **Multi-Stage OCR Pipeline** | ✅ | 5-stage preprocessing (Denoising, Deskewing, Otsu) + Tesseract.js v5 |
-| 5 | **Drug Interaction & Avoidance Engine** | ✅ | Pairwise DDI matrix, ICD-10 checks, safe alternative recommendations |
-| 6 | **AI Reasoning & Decision Layer** | ✅ | Safety Gatekeeper (Anti-Hallucination), dual-recipient report synthesizer |
-| 7 | **Patient Portal — 11 Pages** | ✅ | Dashboard, Profile, Conditions, Allergies, Medications, Prescriptions, Analysis, Results, Reports, History, Settings |
-| 8 | **Doctor Portal — 8 Pages** | ✅ | Dashboard, Directory, Patient 360, Drug Workbench, Reports, Alerts, Audit Logs, Settings |
-| 9 | **Admin Workspace — 6 Pages** | ✅ | System Telemetry, Patient Registry, Audit Ledger, Clinical KB, Reports Archive, Settings |
-| 10 | **Production Build Verification** | ✅ | `npm run build` — 0 errors across all **31 routes** |
+### 3. Configure environment variables
 
----
+Copy `.env.example` to `.env.local`, then replace the example values:
 
-## 🗺️ Complete Route Directory
-
-### 🔓 A. Public & Authentication Routes
-
-| Route | Page | Description |
-|:------|:-----|:------------|
-| `/` | **Landing Page** | 6-step architecture visualizer, interactive DDI sandbox, feature matrix, role gateways |
-| `/login` | **Sign In** | Tabbed patient/doctor login, 1-click demo credential auto-fill, DigiLocker ABHA modal |
-| `/signup` | **Create Account** | Multi-step registration with patient health calibration / doctor council verification |
-| `/forgot-password` | **Password Reset** | Token-based security recovery flow |
-
----
-
-### 🟦 B. Patient Workspace — `/patient/*`
-
-| Route | Page | Description |
-|:------|:-----|:------------|
-| `/patient/dashboard` | **Patient Dashboard** | Real-time clinical metrics, active medications schedule, critical alert banners |
-| `/patient/profile` | **Health Profile** | Personal demographics, physiological metrics (BMI auto-calc, weight, height, blood group) |
-| `/patient/medical-history` | **Medical Conditions** | Full CRUD condition tracker with WHO ICD-10 tagging and search/filter |
-| `/patient/allergies` | **Allergy Registry** | Severity-coded hypersensitivity tracking (`Low`, `Moderate`, `Severe`, `Anaphylactic`) |
-| `/patient/medications` | **My Medications** | RxNorm standardized compound inventory with dosage, frequency, and 1-click safety check |
-| `/patient/prescriptions` | **Prescription Archives** | Ingested prescription documents with raw OCR and cleaned text transcript viewer |
-| `/patient/analysis` | **Medication Safety Hub** | Multi-mode ingestion: 5-Stage OCR Upload, Manual RxNorm Search, Package Scanner |
-| `/patient/analysis/results` | **Safety Matrix Results** | Combinatorial pairwise DDI matrix, ICD-10 contraindications, Drug Avoidance |
-| `/patient/reports` | **Safety Dossier Viewer** | Dual-recipient report (Patient Plain English vs Clinician Dossier) with 1-click Print / PDF |
-| `/patient/history` | **Interaction History** | Longitudinal audit trail of previous analysis sessions with re-run & comparison |
-| `/patient/settings` | **Account & Security** | Password change, critical SMS/email notification toggles, active sessions |
-
----
-
-### 🟩 C. Doctor / Clinician Workspace — `/doctor/*`
-
-| Route | Page | Description |
-|:------|:-----|:------------|
-| `/doctor/dashboard` | **Clinician Workbench** | Triage metrics, assigned patient roster, critical contraindication flags, pending reviews |
-| `/doctor/patients` | **Patient Directory** | Searchable patient registry with condition badges, blood groups, and quick triage actions |
-| `/doctor/patients/[id]` | **Patient 360 Record** | Complete longitudinal patient record (diagnoses, allergies, meds, rxs) with 1-click Clinical Review |
-| `/doctor/analysis` | **Multi-Drug Workbench** | Advanced regimen simulator, custom compound combinations, instant DDI matrix calculation |
-| `/doctor/reports` | **Clinical Dossiers** | Archive of physician-grade pharmacotherapy reports with evidence citations |
-| `/doctor/alerts` | **Critical Alerts Inbox** | High-priority clinical feed for dangerous drug interactions across all rostered patients |
-| `/doctor/audit-logs` | **Regulatory Audit Logs** | Immutable HIPAA/CDSCO decision audit logs with evidence guidelines (FDA, CHEST, CPIC) |
-| `/doctor/settings` | **Physician Credentials** | Medical registration/licensure numbers, primary specialty, and hospital affiliations |
-
----
-
-### 🟥 D. Admin Workspace — `/admin/*`
-
-| Route | Page | Description |
-|:------|:-----|:------------|
-| `/admin/system-health` | **System Diagnostics & Telemetry** | Live telemetry checks for Database, Neural OCR Engine, RxNorm Service, and AI Reasoning Layer |
-| `/admin/patients` | **Admin Patient Registry** | Registered patient directory with condition badges, blood group indicators, and inspection |
-| `/admin/audit-logs` | **Regulatory Audit Ledger** | System-wide security traces, user activity logs, and evidence baseline citations |
-| `/admin/clinical-engine` | **Clinical Knowledge Catalog** | Catalog of pharmaceutical compounds, pairwise DDI rules, and ICD-10 disease contraindications |
-| `/admin/reports` | **System Reports Archive** | Central archive of synthesized patient summaries and physician pharmacological dossiers |
-| `/admin/settings` | **System Preferences** | OCR confidence thresholds, RxNorm sync frequency, AI Safety Gatekeeper strictness, audit retention |
-
----
-
-## 📐 System Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    MedSafe AI — 9-Stage Pipeline                │
-└─────────────────────────────────────────────────────────────────┘
-
-  Patient / Doctor
-        │
-        ▼
-  [1] Authentication ── Credentials / DigiLocker ABHA National ID
-        │
-        ▼
-  [2] Role-Based Dashboard ── Patient Portal │ Doctor Workbench │ Admin
-        │
-        ▼
-  [3] Prescription Ingestion ── OCR Upload │ Manual Search │ Scanner
-        │
-        ▼
-  [4] 5-Stage Image Pre-Processing
-         ├── Bilateral Noise Removal
-         ├── Skew Detection & Correction
-         ├── Otsu Contrast Binarization
-         ├── Morphological Cleaning
-         └── Region-of-Interest Cropping
-        │
-        ▼
-  [5] Neural OCR Engine ── Tesseract.js v5 + Medical NER Tokenizer
-        │
-        ▼
-  [6] RxNorm Normalization ── Brand → Generic │ RxCUI │ ATC Class
-        │
-        ▼
-  [7] Patient Context Fusion ── ICD-10 Diagnoses │ Weight │ Allergies
-        │
-        ▼
-  [8] Clinical Safety Matrix ─────────────────────────────────────
-         ├── Drug-Drug Interaction Matrix  (LOW │ MODERATE │ MAJOR)
-         ├── ICD-10 Disease Contraindications
-         ├── Black-Box Drug Warnings (FDA)
-         └── Drug Avoidance Engine + Safer Alternatives
-        │
-        ▼
-  [9] AI Reasoning Core ── Anti-Hallucination Safety Gatekeeper
-        │
-        ▼
-  Dual Recipient Output Synthesis
-   ├── 👤 Patient Report  (Plain English, Schedule, Food, Alerts)
-   └── 🩺 Doctor Dossier  (Mechanisms, ICD-10, Monitoring, Citations)
-        │
-        ▼
-  Immutable Interaction History & Regulatory Audit Log
+```bash
+cp .env.example .env.local
 ```
 
----
+PowerShell users can run:
 
-## 🗄️ Database Schema
+```powershell
+Copy-Item .env.example .env.local
+```
 
-### Baseline CSV Schema (`data-1786955744718.csv`)
+The application requires these values:
 
-| # | Table | Key Columns |
-|:--|:------|:------------|
-| 1 | `drugs` | `drug_id`, `rxcui`, `brand_name`, `generic_name`, `dosage_form`, `strength`, `route`, `atc_code` |
-| 2 | `drug_interactions` | `interaction_id`, `drug1_id`, `drug2_id`, `severity`, `description`, `recommendation`, `evidence_source` |
-| 3 | `contraindications` | `contraindication_id`, `drug_id`, `medical_condition_id`, `severity`, `description` |
-| 4 | `medical_conditions` | `medical_condition_id`, `icd10_code`, `condition_name`, `category` |
-| 5 | `patient_conditions` | `patient_condition_id`, `patient_id`, `medical_condition_id`, `severity`, `status` |
-| 6 | `patients` | `patient_id`, `full_name`, `age`, `gender`, `weight`, `height`, `blood_group`, `email` |
-| 7 | `prescriptions` | `prescription_id`, `patient_id`, `doctor_name`, `hospital_name`, `ocr_text` |
-| 8 | `prescription_drugs` | `prescription_drug_id`, `prescription_id`, `drug_id`, `dosage`, `frequency`, `duration` |
-| 9 | `drug_warnings` | `warning_id`, `drug_id`, `warning_type`, `warning_text`, `source` |
-| 10 | `drug_classes` | `class_id`, `drug_id`, `class_name`, `class_type` |
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://your_project_ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key_here
+DATABASE_URL=postgresql://your_database_user:your_encoded_password@your_pooler_host:5432/postgres
 
-### Application Extension Tables
+OLLAMA_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=mistral-nemo:12b
+OLLAMA_NUM_GPU=0
+```
 
-| # | Table | Purpose |
-|:--|:------|:--------|
-| 11 | `users` | Role-based authentication (`patient`, `doctor`, `admin`) |
-| 12 | `doctor_profiles` | Physician credentials, licensing numbers, hospital affiliations |
-| 13 | `patient_allergies` | Allergy cross-screening records with severity tiers |
-| 14 | `analysis_sessions` | Stored clinical safety evaluations with risk scores |
-| 15 | `patient_reports` | Dual patient/doctor synthesized report content |
-| 16 | `audit_logs` | Immutable HIPAA-compliant decision and evidence trail |
-| 17 | `notifications` | Real-time severity alert delivery registry |
+Percent-encode reserved characters in the database password before adding it to `DATABASE_URL`. Never commit `.env.local`.
 
----
+Langfuse tracing is optional:
 
-## ⚖️ Medical & Regulatory Disclaimer
+```dotenv
+LANGFUSE_SECRET_KEY=your_langfuse_secret_key_here
+LANGFUSE_PUBLIC_KEY=your_langfuse_public_key_here
+LANGFUSE_BASE_URL=https://us.cloud.langfuse.com
+```
 
-> [!IMPORTANT]
-> **Clinical Decision Support Notice**
->
-> MedSafe AI is an automated medication safety and clinical decision-support platform designed to assist healthcare professionals and empower patients with medication safety intelligence. **It is not a substitute for clinical judgment, professional medical diagnosis, or personalized medical advice from a qualified healthcare provider.**
->
-> - Do not discontinue or alter medications without consulting your prescribing physician or licensed pharmacist.
-> - All clinical outputs are intended as decision-support aids, not clinical directives.
-> - Evidence citations reference FDA, WHO, CHEST, and CPIC clinical guidelines.
+### 4. Configure Supabase Authentication
 
----
+Enable email authentication in Supabase. For local development, set:
+
+- **Site URL**: `http://localhost:3000`
+- **Redirect URL**: `http://localhost:3000/auth/callback`
+
+Import the clinical `drugs` and `drug_interactions` data before using medicine interaction checks.
+
+### 5. Apply database migrations
+
+Run the SQL files from `supabase/migrations` in filename order:
+
+1. `202609260001_patient_profiles.sql`
+2. `202609260002_lock_clinical_tables.sql`
+3. `202609270001_doctor_consent.sql`
+4. `202609270002_patient_medicines.sql`
+5. `202609270003_chat_history.sql`
+6. `202609270004_prescriptions_reports.sql`
+7. `202609280001_doctor_reports.sql`
+
+The migrations add application tables and security policies. They do not delete imported clinical records.
+
+### 6. Start the local model
+
+Download the configured model once:
+
+```bash
+ollama pull mistral-nemo:12b
+```
+
+Start Ollama if it is not already running:
+
+```bash
+ollama serve
+```
+
+Vediora only accepts loopback Ollama addresses. This keeps model prompts on the local machine.
+
+### 7. Start the application
+
+```bash
+bun run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Connected routes
+
+### Public and authentication routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Product overview and guest chat preview |
+| `/login` | Email sign-in |
+| `/signup` | Patient or doctor account creation |
+| `/forgot-password` | Password recovery request |
+| `/reset-password` | Password update after recovery |
+| `/auth/callback` | Supabase Authentication callback |
+| `/access-pending` | Role or access status guidance |
+
+### Patient routes
+
+| Route | Purpose |
+| --- | --- |
+| `/patient/dashboard` | Patient overview and live record counts |
+| `/patient/chat` | Medical and medicine chat history |
+| `/patient/medications` | Active and discontinued medicines |
+| `/patient/prescriptions` | Confirmed prescription records |
+| `/patient/reports` | Versioned evidence reports |
+| `/patient/access` | Doctor access requests and approvals |
+| `/patient/profile` | Health profile editor |
+
+### Doctor routes
+
+| Route | Purpose |
+| --- | --- |
+| `/doctor/dashboard` | Doctor overview and live record counts |
+| `/doctor/chat` | Medical and medicine chat history |
+| `/doctor/patients` | Access requests and approved patients |
+| `/doctor/patients/[id]` | Consent-scoped patient record |
+| `/doctor/analysis` | Clinical medicine review |
+| `/doctor/reports` | Doctor evidence reports |
+| `/doctor/profile` | Doctor profile editor |
+
+## Validate a local installation
+
+Run these checks before sharing changes:
+
+```bash
+bun run typecheck
+bun run test
+bun run test:e2e
+bun run build
+```
+
+The current branch passes TypeScript checking, 18 unit tests, 6 Playwright tests, and a production build.
+
+## Data and security model
+
+Vediora applies role-aware access in server routes and database policies. Patients control doctor access, and doctors can read patient records only while approval remains active. Public browser clients cannot edit imported clinical reference tables.
+
+Keep these files and values private:
+
+- `.env.local`
+- Supabase database passwords and service credentials
+- Langfuse secret keys
+- Local logs containing prompts or health information
+- Database exports with patient data
+
+The repository excludes generated build output, dependencies, local logs, and environment files through `.gitignore`.
+
+## Known limitations
+
+- Medical responses depend on the coverage of the imported interaction dataset
+- Local Mistral can respond slowly on CPU-only machines
+- Missing interaction records do not establish safety
+- Prescription records require manual confirmation because OCR is deferred
+- Condition, pregnancy, allergy, dose, and laboratory checks require clinical review
+- The application does not independently verify doctor credentials
+
+## Team Vediora
+
+| Name | Role |
+| --- | --- |
+| Darji Avani Rajendrabhai | Team Leader |
+| Darji Janvi Navinbhai | Co-Leader |
+| Dobariya Bhavarth Jitendra | Member |
+| Shaikh Ayanuddin Ayazuddin | Member |
+| Kunj Shaileshbhai Darji | Member |
+| Hetarth Umang Bhatt | Member |
+
+LDRP Institute of Technology and Research
+
+## Medical disclaimer
+
+Vediora supports medication education and clinical review. It does not diagnose conditions or replace a doctor, pharmacist, emergency service, or other qualified healthcare professional. Do not start, stop, or change medication based only on this application.
+
+## License
+
+No open-source license has been added to this repository. Contact the project team before copying, distributing, or reusing the code.
 
 <div align="center">
 
-**Built for SVNIT WIE Hackathon 2026** 🏆
-
-*Empowering patients. Augmenting physicians. Preventing harm.*
-
-[![GitHub](https://img.shields.io/badge/GitHub-hetarthbhatt07%2FWIE--SVNIT--FN-181717?style=flat-square&logo=github)](https://github.com/hetarthbhatt07/WIE-SVNIT-FN)
+Built by Team Vediora
 
 </div>
