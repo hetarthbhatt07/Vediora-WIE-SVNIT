@@ -1,0 +1,139 @@
+================================================================================
+          VEDIORA - AWS EC2 DEPLOYMENT & RUN CHEATSHEET
+================================================================================
+
+Server Details:
+- Instance ID: i-081d86919bcd08d8c (c7i.2xlarge - 8 vCPUs, 16 GB RAM)
+- Current Public IPv4: 13.126.77.10
+- Key File: vediora-key.pem (located in C:\Users\DELL\Downloads)
+- Username: ubuntu
+- Application Port: 3000
+
+================================================================================
+1. DAILY USAGE: HOW TO CONNECT & RUN THE APP (ON-DEMAND)
+================================================================================
+
+Step 1: Open Windows PowerShell on your laptop and go to Downloads folder:
+    cd C:\Users\DELL\Downloads
+
+Step 2: Connect via SSH to your AWS server:
+    ssh -o ServerAliveInterval=60 -i "vediora-key.pem" ubuntu@13.126.77.10
+
+    *(Note: If you stopped and started the instance in AWS, the Public IP may change.
+      Replace 13.126.77.10 with the current Public IP from the AWS EC2 dashboard).*
+
+Step 3: Go to the project directory:
+    cd WIE-SVNIT-FN
+
+Step 4: Start the application:
+    npm start
+
+Step 5: Open your browser and access the live application at:
+    http://13.126.77.10:3000
+
+Step 6: To STOP the application:
+    Press Ctrl + C in the terminal.
+
+================================================================================
+2. COMPLETE ENVIRONMENT VARIABLES (.env.local)
+================================================================================
+
+File path on server: /home/ubuntu/WIE-SVNIT-FN/.env.local
+
+To view or edit on the server:
+    nano .env.local
+
+Content:
+--------------------------------------------------------------------------------
+NEXT_PUBLIC_SUPABASE_URL="https://wziknuxpteofdaejdgoj.supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_0JgQDTHNgA7LTk-px89xqw_y4-CXf0b"
+
+DATABASE_URL="postgresql://postgres.wziknuxpteofdaejdgoj:Kunj%40%287007%29@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require"
+
+LANGFUSE_SECRET_KEY="sk-lf-b33bbab5-2b9b-4d1c-afb1-1a4858e03ca8"
+LANGFUSE_PUBLIC_KEY="pk-lf-d191eef8-71b8-40de-ba4f-174f003b1b3a"
+LANGFUSE_BASE_URL="https://us.cloud.langfuse.com"
+LANGFUSE_TRACING_ENVIRONMENT="production"
+
+OLLAMA_URL="http://127.0.0.1:11434"
+OLLAMA_MODEL="mistral-nemo:12b"
+OLLAMA_NUM_GPU="0"
+--------------------------------------------------------------------------------
+
+To save in nano: Press Ctrl + O, hit Enter, then Ctrl + X.
+
+================================================================================
+3. MANAGING AWS COSTS ($20 CREDITS PROTECTION)
+================================================================================
+
+- WHEN YOU ARE NOT USING THE APP:
+  1. Go to AWS EC2 Console -> Instances.
+  2. Select your instance -> Click "Instance state" -> "Stop instance".
+  3. While STOPPED, AWS charges $0.00 for compute hours!
+
+- WHEN YOU ARE READY TO PRESENT TO JUDGES / TEST:
+  1. Go to AWS EC2 Console -> Select instance -> "Instance state" -> "Start instance".
+  2. Copy the new Public IPv4 address.
+  3. Connect via PowerShell:
+     ssh -o ServerAliveInterval=60 -i "vediora-key.pem" ubuntu@<PUBLIC-IP>
+  4. cd WIE-SVNIT-FN
+  5. npm start
+  6. Open: http://<PUBLIC-IP>:3000
+
+================================================================================
+4. RE-BUILDING THE APP (IF YOU PULL NEW CODE CHANGES)
+================================================================================
+
+If you update code on GitHub and want to update the AWS server:
+
+    cd ~/WIE-SVNIT-FN
+    git pull origin final-project-kunj
+    npm install
+    npm run build
+    npm start
+
+================================================================================
+5. OLLAMA AI MAINTENANCE COMMANDS
+================================================================================
+
+- Check installed models:
+    ollama list
+
+- Pull a new model:
+    ollama pull mistral-nemo:12b
+    ollama pull llama3.2:3b
+
+- Test Ollama directly in terminal:
+    ollama run mistral-nemo:12b "Explain Amlodipine"
+    *(Press Ctrl + D to exit chat)*
+
+- Check if Ollama service is active:
+    curl http://127.0.0.1:11434/api/tags
+
+- Restart Ollama service if ever needed:
+    sudo systemctl restart ollama
+
+================================================================================
+6. OPTIONAL: RUN IN BACKGROUND 24/7 (USING PM2)
+================================================================================
+
+If you ever want it to keep running even after closing your laptop terminal:
+
+    sudo npm install -g pm2
+    cd ~/WIE-SVNIT-FN
+    pm2 start "npm start" --name "vediora"
+    pm2 save
+    pm2 startup
+
+- To check status:
+    pm2 status
+
+- To view logs:
+    pm2 logs
+
+- To stop the background app:
+    pm2 stop vediora
+
+- To restart the background app:
+    pm2 restart vediora
+================================================================================
