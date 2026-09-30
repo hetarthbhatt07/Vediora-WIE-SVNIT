@@ -6,6 +6,13 @@ import type { AccessRequestStatus } from '@/lib/access-control';
 export const dynamic = 'force-dynamic';
 
 interface DoctorRow {
+  full_name: string;
+  phone: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  blood_group: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
   license_number: string;
   specialization: string | null;
   organization: string | null;
@@ -63,8 +70,12 @@ export async function GET() {
 
     const [doctor, requests, patients, summary, recentReports] = await Promise.all([
       query<DoctorRow>(
-        `select license_number, specialization, organization, verification_status
-           from public.vediora_doctor_profiles where id = $1`,
+        `select p.full_name, p.phone, p.date_of_birth, p.gender, p.blood_group,
+                p.height_cm, p.weight_kg, d.license_number, d.specialization,
+                d.organization, d.verification_status
+           from public.vediora_doctor_profiles d
+           join public.vediora_profiles p on p.id = d.id
+          where d.id = $1`,
         [current.user.id],
       ),
       query<RequestRow>(
@@ -119,8 +130,14 @@ export async function GET() {
     return privateJson({
       doctor: {
         id: current.user.id,
-        fullName: current.account.full_name,
+        fullName: doctor.rows[0].full_name,
         email: current.user.email || null,
+        phone: doctor.rows[0].phone,
+        dateOfBirth: doctor.rows[0].date_of_birth,
+        gender: doctor.rows[0].gender,
+        bloodGroup: doctor.rows[0].blood_group,
+        heightCm: doctor.rows[0].height_cm,
+        weightKg: doctor.rows[0].weight_kg,
         licenseNumber: doctor.rows[0].license_number,
         specialization: doctor.rows[0].specialization,
         organization: doctor.rows[0].organization,

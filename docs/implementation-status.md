@@ -1,6 +1,6 @@
 # Vediora implementation status
 
-Last updated: 2026-09-28
+Last updated: 2026-09-30
 
 ## Implemented
 
@@ -34,8 +34,8 @@ Last updated: 2026-09-28
 - The chat workspace lists the 30 most recently updated conversations. Patients and doctors can start a blank chat, reopen an earlier conversation with its structured interaction cards, and continue that selected conversation without mixing contexts.
 - Workspace loading no longer waits for a duplicate browser-side Supabase session check after server authorization. Server layouts use one combined auth/account lookup, protected page responses can use Next.js client navigation caching, and the shared drug catalog cache lasts one hour.
 - Follow-up wording such as “explain it” or “tell me more” reuses medicine names from recent user messages before deterministic database checks. Saved active medicines are deduplicated by canonical name.
-- Langfuse isolated the failed answers to Ollama timeouts and a Blackwell CUDA Flash Attention initialization fault. Ollama now runs with Flash Attention disabled at the user environment level, and this workstation configures 37 GPU layers through `OLLAMA_NUM_GPU`.
-- Ollama proved unstable when given a JSON Schema object. Vediora now uses stable JSON mode with a compact three-field contract, accepts structured-object answers defensively, and formats them into readable headings and bullet points. Recent conversation context is capped to six messages of 600 characters each, generation is capped at 900 tokens, and stalled generations stop after 90 seconds.
+- Langfuse isolated failed answers to Ollama timeouts and a Blackwell CUDA Flash Attention initialization fault. The stable local configuration disables Flash Attention and uses 20 GPU layers through the private `OLLAMA_NUM_GPU` environment setting.
+- Ollama proved unstable when given a JSON Schema object. Vediora now uses stable JSON mode with a compact three-field contract, accepts structured-object answers defensively, and formats them into readable headings and bullet points. Recent conversation context is capped to six messages of 600 characters each, generation is capped at 900 tokens, and stalled generations stop after 120 seconds.
 - One-character follow-ups are accepted. `?`, “explain me,” “tell me more,” and “I also take …” are resolved against the selected conversation before medicine recognition and generation.
 - Browser access removed from imported clinical tables; the chat queries them only through the server-side Session Pooler connection.
 - The public landing page now describes only connected capabilities and includes a two-message guest preview. Combination questions use imported database records; detailed local-Mistral education requires sign-in.
@@ -48,7 +48,7 @@ All seven Vediora migrations were applied to the configured Supabase project. Th
 
 - `bun run typecheck` passes.
 - `bun run test` passes: 18 tests.
-- `bun run test:e2e` passes: 5 Playwright tests.
+- `bun run test:e2e` passes: 6 Playwright tests.
 - `bun run build` passes with Next.js 15.5.26.
 - The rebuilt landing route loads about 113 kB of first-load JavaScript, down from about 193 kB before the redesign.
 - A live anonymous Supabase Data API probe reaches `vediora_profiles` and is denied because `anon` has no table grant, confirming the profile boundary is active.
@@ -81,7 +81,7 @@ Email confirmation is enabled. Each new Auth user receives a patient or doctor p
 - OCR, alerts, optional condition/allergy rules, and admin screens remain unconnected prototypes. Manual prescription ingestion, patient reports, doctor clinical review, and consent-scoped doctor reports are connected.
 - Chat history is persisted, but it is not yet converted into a signed or versioned clinical report.
 - Medicine recognition is deterministic name matching with explicit ambiguity rejection against imported generic, brand, and ingredient names. It is not yet a full RxNorm normalization workflow.
-- Local Mistral generation remains slower than the database workflow. With the stable GPU configuration, observed detailed answers take about 28 to 39 seconds; a smaller local Mistral model remains the next latency option if download bandwidth permits.
+- Local Mistral generation remains slower than the database workflow. With the stable 20-layer partial offload, the latest four-turn production sequence completed each answer in about 53 to 78 seconds; model and hardware tuning remain future performance work.
 - Ollama must be running and must have the configured model installed. The chat safely falls back to a deterministic database response when generation fails.
 - Langfuse receives the medicine-chat question and structured workflow output. It does not receive the authenticated user's Supabase identifier in this implementation.
 - Doctor registration currently records a self-declared license and marks it `unverified`; a real administrator verification process is not implemented. Patients see this status before approval.

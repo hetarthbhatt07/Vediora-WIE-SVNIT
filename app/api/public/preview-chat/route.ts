@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   } catch { return json({ error: 'Enter a valid question using 500 characters or fewer.' }, 400); }
   try {
     if (/\b(sign|account|patient|doctor|report|vediora|what can|how (?:does|it)|feature)\b/i.test(message) && !/\b(medicine|drug|health|medical|symptom|condition|test)\b/i.test(message)) {
-      return json({ answer: 'After signing in, patients can save medicines and confirmed prescriptions, continue remembered chats, generate evidence reports, and control doctor access. Approved doctors can review the same current records and create consent-scoped clinical reports.', remaining: 2 });
+      return json({ answer: 'After signing in, patients can save medicines and confirmed prescriptions, generate evidence reports, and control doctor access. Approved doctors can review the current records and create consent-scoped clinical reports.', remaining: 2 });
     }
     const catalog=await getCatalog(); const ambiguous=findAmbiguousMedicineMentions(message,catalog);
     if(ambiguous.length>0) return json({answer:`I found more than one possible match for “${ambiguous[0].mention}”. Please enter an exact generic medicine name.`,remaining:2});

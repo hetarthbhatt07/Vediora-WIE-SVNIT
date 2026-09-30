@@ -39,3 +39,38 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local tooling and editor state
+/.codebase-memory/
+/.vercel/
+/.vscode/
+/.idea/
+Thumbs.db
+~$*
+
+# private archives and local database exports
+*.zip
+*.dump
+*.backup
+*.sqlite
+*.sqlite3
+*.db
+/private/
+/presentation_work/
+/docs/presentation/
+/WIE_DOC.pdf
+/WIE_AYAN.docx
+/SIH 137 VEDIORA.pdf
+*.pdf
+*.ppt
+*.pptx
+*private-files*.zip
+
+# Python helper output
+__pycache__/
+*.py[cod]
+/.venv/
+/venv/
+
+# Supabase CLI state
+/supabase/.temp/
