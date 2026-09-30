@@ -35,9 +35,32 @@ export function parseAccessResponseInput(value: unknown) {
 
 export function parseDoctorProfileInput(value: unknown) {
   const input = object(value);
-  const fields = ['license_number', 'specialization', 'organization'];
+  const fields = ['full_name', 'phone', 'date_of_birth', 'gender', 'blood_group', 'height_cm', 'weight_kg', 'license_number', 'specialization', 'organization'];
   if (Object.keys(input).some(key => !fields.includes(key))) throw new Error('Unexpected doctor profile field.');
+
+  const full_name = limitedText(input.full_name, 'full name', 120, true)!;
+  const date_of_birth = limitedText(input.date_of_birth, 'date of birth', 10);
+  if (date_of_birth) {
+    const date = new Date(`${date_of_birth}T00:00:00Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date_of_birth) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== date_of_birth || date > new Date() || date.getUTCFullYear() < 1900) throw new Error('Enter a valid date of birth.');
+  }
+  const measurement = (key: 'height_cm' | 'weight_kg', maximum: number) => {
+    const measurementValue = input[key];
+    if (measurementValue == null || measurementValue === '') return null;
+    if (typeof measurementValue !== 'number' || !Number.isFinite(measurementValue) || measurementValue <= 0 || measurementValue > maximum) throw new Error(`Invalid ${key.replaceAll('_', ' ')}.`);
+    return measurementValue;
+  };
+  const blood_group = limitedText(input.blood_group, 'blood group', 3);
+  if (blood_group && !['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].includes(blood_group)) throw new Error('Choose a valid blood group.');
+
   return {
+    full_name,
+    phone: limitedText(input.phone, 'phone', 30),
+    date_of_birth,
+    gender: limitedText(input.gender, 'gender', 40),
+    blood_group,
+    height_cm: measurement('height_cm', 300),
+    weight_kg: measurement('weight_kg', 700),
     license_number: limitedText(input.license_number, 'license number', 80, true)!,
     specialization: limitedText(input.specialization, 'specialization', 120),
     organization: limitedText(input.organization, 'organization', 160),

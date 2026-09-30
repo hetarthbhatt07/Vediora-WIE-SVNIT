@@ -18,6 +18,11 @@ test('accepts only patient-controlled consent transitions', () => {
 });
 
 test('validates editable doctor profile fields', () => {
-  assert.deepEqual(controls.parseDoctorProfileInput({ license_number: ' GMC-123 ', specialization: '', organization: ' Clinic ' }), { license_number: 'GMC-123', specialization: null, organization: 'Clinic' });
-  assert.throws(() => controls.parseDoctorProfileInput({ license_number: '', verification_status: 'verified' }));
+  assert.deepEqual(controls.parseDoctorProfileInput({ full_name: ' Dr Demo ', phone: ' 0000000000 ', date_of_birth: '1986-08-14', gender: 'Male', blood_group: 'O+', height_cm: 178, weight_kg: 74.5, license_number: ' DEMO-GMC-123 ', specialization: '', organization: ' Clinic ' }), {
+    full_name: 'Dr Demo', phone: '0000000000', date_of_birth: '1986-08-14', gender: 'Male', blood_group: 'O+', height_cm: 178, weight_kg: 74.5,
+    license_number: 'DEMO-GMC-123', specialization: null, organization: 'Clinic',
+  });
+  assert.throws(() => controls.parseDoctorProfileInput({ full_name: 'Dr Demo', license_number: '', verification_status: 'verified' }));
+  assert.throws(() => controls.parseDoctorProfileInput({ full_name: 'Dr Demo', license_number: 'DEMO-1', date_of_birth: '2026-02-30' }));
+  assert.throws(() => controls.parseDoctorProfileInput({ full_name: 'Dr Demo', license_number: 'DEMO-1', weight_kg: -1 }));
 });
